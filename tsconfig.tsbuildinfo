@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/editor.tsx","./src/components/imageupload.tsx","./src/components/preview.tsx","./src/hooks/useemojistate.ts","./src/types/emoji.ts","./src/utils/canvas.test.ts","./src/utils/canvas.ts"],"version":"5.7.3"}
