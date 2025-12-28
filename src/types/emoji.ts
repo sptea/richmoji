@@ -19,6 +19,41 @@ export const SHADOW_PRESETS = {
 
 export type ShadowPresetId = keyof typeof SHADOW_PRESETS
 
+// アニメーション効果（15種類）
+export const ANIMATION_EFFECTS = [
+  { id: 'blink', name: '点滅', description: '表示/非表示を繰り返す' },
+  { id: 'pulse', name: 'パルス', description: '拡大縮小を繰り返す' },
+  { id: 'bounce', name: 'バウンス', description: '上下に跳ねる' },
+  { id: 'shake', name: 'シェイク', description: '左右に振動' },
+  { id: 'scroll-h', name: '横スクロール', description: '左から右に流れる' },
+  { id: 'scroll-v', name: '縦スクロール', description: '上から下に流れる' },
+  { id: 'rainbow', name: 'レインボー', description: '色が虹色に変化' },
+  { id: 'rotate', name: '回転', description: 'くるくる回転' },
+  { id: 'fade', name: 'フェード', description: 'フェードイン/アウト' },
+  { id: 'zoom', name: '拡大', description: '小→大にズーム' },
+  { id: 'typing', name: 'タイピング', description: '一文字ずつ表示' },
+  { id: 'wave', name: '波打ち', description: '文字が波のように動く' },
+  { id: 'neon', name: 'ネオン', description: '光るネオン効果' },
+  { id: 'wobble', name: '揺らぎ', description: 'ぐにゃぐにゃ揺れる' },
+  { id: 'pop', name: '飛び出し', description: 'ポンと飛び出す' },
+] as const
+
+export type AnimationEffectId = typeof ANIMATION_EFFECTS[number]['id']
+
+// アニメーション設定
+export interface AnimationState {
+  effects: AnimationEffectId[]  // 複数同時適用可能
+  speed: number                 // 速度 (0.5 - 2.0)
+  enabled: boolean              // アニメーション有効/無効
+}
+
+// デフォルトアニメーション設定
+export const DEFAULT_ANIMATION_STATE: AnimationState = {
+  effects: [],
+  speed: 1,
+  enabled: false,
+}
+
 // 背景画像の状態
 export interface BackgroundImage {
   data: string | null  // Base64エンコードされた画像データ
@@ -47,6 +82,7 @@ export interface EmojiState {
     width: number
   }
   shadow: ShadowPresetId
+  animation: AnimationState
 }
 
 // デフォルト背景画像
@@ -77,6 +113,7 @@ export const DEFAULT_EMOJI_STATE: EmojiState = {
     width: 2,
   },
   shadow: 'none',
+  animation: DEFAULT_ANIMATION_STATE,
 }
 
 // プリセットカラー（16色）

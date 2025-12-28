@@ -4,6 +4,7 @@ import { Editor } from './components/Editor'
 import { useEmojiState } from './hooks/useEmojiState'
 import { FONTS } from './types/emoji'
 import { calculateAutoFitSize, downloadAsPng, loadImage, drawEmoji } from './utils/canvas'
+import { downloadAsGif } from './utils/gif'
 
 function App() {
   const {
@@ -25,17 +26,13 @@ function App() {
     setStrokeColor,
     setStrokeWidth,
     setShadow,
+    toggleAnimationEffect,
+    setAnimationSpeed,
+    clearAnimation,
     applyPreset,
   } = useEmojiState()
 
   const handleDownload = useCallback(async () => {
-    // 出力用のCanvasを作成
-    const canvas = document.createElement('canvas')
-    canvas.width = 128
-    canvas.height = 128
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
     // 背景画像がある場合は読み込む
     let bgImageElement: HTMLImageElement | undefined
     if (state.backgroundImage.data) {
@@ -46,11 +43,24 @@ function App() {
       }
     }
 
-    // 描画
-    drawEmoji(ctx, state, bgImageElement)
     // ファイル名は入力テキストの最初の行（または'emoji'）
     const filename = state.text.split('\n')[0].trim() || 'emoji'
-    downloadAsPng(canvas, filename)
+
+    // アニメーションが有効な場合はGIF、そうでなければPNG
+    if (state.animation.enabled && state.animation.effects.length > 0) {
+      await downloadAsGif(state, bgImageElement, filename)
+    } else {
+      // 出力用のCanvasを作成
+      const canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 128
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      // 描画
+      drawEmoji(ctx, state, bgImageElement)
+      downloadAsPng(canvas, filename)
+    }
   }, [state])
 
   const handleAutoFit = useCallback(() => {
@@ -88,6 +98,7 @@ function App() {
               strokeColor={state.stroke.color}
               strokeWidth={state.stroke.width}
               shadow={state.shadow}
+              animation={state.animation}
               onTextChange={setText}
               onFontIdChange={setFontId}
               onFontSizeChange={setFontSize}
@@ -105,6 +116,9 @@ function App() {
               onStrokeColorChange={setStrokeColor}
               onStrokeWidthChange={setStrokeWidth}
               onShadowChange={setShadow}
+              onToggleAnimationEffect={toggleAnimationEffect}
+              onAnimationSpeedChange={setAnimationSpeed}
+              onAnimationClear={clearAnimation}
               onAutoFit={handleAutoFit}
               onApplyPreset={applyPreset}
             />

@@ -1,6 +1,7 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { EmojiState, FONTS } from '../types/emoji'
 import { drawEmoji, loadImage } from '../utils/canvas'
+import { calculateFrameTransform, calculateTotalFrames } from '../utils/animation'
 
 interface PreviewProps {
   state: EmojiState
@@ -14,6 +15,8 @@ export function Preview({ state, onDownload, compact = false }: PreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [background, setBackground] = useState<BackgroundType>('checker')
   const [bgImageElement, setBgImageElement] = useState<HTMLImageElement | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+  const startTimeRef = useRef<number | null>(null)
 
   // 背景画像を読み込む
   useEffect(() => {
@@ -24,7 +27,34 @@ export function Preview({ state, onDownload, compact = false }: PreviewProps) {
     }
   }, [state.backgroundImage.data])
 
-  // Canvasを描画
+  // テキストの長さ（改行を除く）
+  const textLength = state.text.replace(/\n/g, '').length
+
+  // アニメーションループ
+  const animate = useCallback((timestamp: number) => {
+    if (startTimeRef.current === null) {
+      startTimeRef.current = timestamp
+    }
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const totalFrames = calculateTotalFrames(state.animation.speed)
+    const duration = totalFrames * 100 // 10fps = 100ms per frame
+    const elapsed = timestamp - startTimeRef.current
+    const progress = (elapsed % duration) / duration
+    const frameIndex = Math.floor(progress * totalFrames)
+
+    const transform = calculateFrameTransform(state.animation, frameIndex, totalFrames, textLength)
+    drawEmoji(ctx, state, bgImageElement || undefined, transform)
+
+    animationFrameRef.current = requestAnimationFrame(animate)
+  }, [state, bgImageElement, textLength])
+
+  // Canvas描画（静止画またはアニメーション）
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -32,8 +62,29 @@ export function Preview({ state, onDownload, compact = false }: PreviewProps) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    drawEmoji(ctx, state, bgImageElement || undefined)
-  }, [state, bgImageElement])
+    // 前のアニメーションをキャンセル
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+    startTimeRef.current = null
+
+    if (state.animation.enabled && state.animation.effects.length > 0) {
+      // アニメーション再生
+      animationFrameRef.current = requestAnimationFrame(animate)
+    } else {
+      // 静止画描画
+      drawEmoji(ctx, state, bgImageElement || undefined)
+    }
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [state, bgImageElement, animate])
+
+  const isAnimated = state.animation.enabled && state.animation.effects.length > 0
 
   const getBackgroundStyle = (type: BackgroundType) => {
     switch (type) {
@@ -107,7 +158,7 @@ export function Preview({ state, onDownload, compact = false }: PreviewProps) {
           onClick={onDownload}
           className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors"
         >
-          PNGをダウンロード
+          {isAnimated ? 'GIFをダウンロード' : 'PNGをダウンロード'}
         </button>
       </div>
     )
@@ -224,7 +275,7 @@ export function Preview({ state, onDownload, compact = false }: PreviewProps) {
         onClick={onDownload}
         className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
       >
-        PNGをダウンロード
+        {isAnimated ? 'GIFをダウンロード' : 'PNGをダウンロード'}
       </button>
     </div>
   )

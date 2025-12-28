@@ -1,5 +1,6 @@
-import { FONTS, PRESET_COLORS, STYLE_PRESETS, FontId, ShadowPresetId, StylePreset, BackgroundImage } from '../types/emoji'
+import { FONTS, PRESET_COLORS, STYLE_PRESETS, FontId, ShadowPresetId, StylePreset, BackgroundImage, AnimationState, AnimationEffectId } from '../types/emoji'
 import { ImageUpload } from './ImageUpload'
+import { AnimationSelector } from './AnimationSelector'
 
 interface EditorProps {
   text: string
@@ -15,6 +16,7 @@ interface EditorProps {
   strokeColor: string
   strokeWidth: number
   shadow: ShadowPresetId
+  animation: AnimationState
   onTextChange: (text: string) => void
   onFontIdChange: (id: FontId) => void
   onFontSizeChange: (size: number) => void
@@ -32,6 +34,9 @@ interface EditorProps {
   onStrokeColorChange: (color: string) => void
   onStrokeWidthChange: (width: number) => void
   onShadowChange: (shadow: ShadowPresetId) => void
+  onToggleAnimationEffect: (effectId: AnimationEffectId) => void
+  onAnimationSpeedChange: (speed: number) => void
+  onAnimationClear: () => void
   onAutoFit: () => void
   onApplyPreset: (preset: StylePreset) => void
 }
@@ -50,6 +55,7 @@ export function Editor({
   strokeColor,
   strokeWidth,
   shadow,
+  animation,
   onTextChange,
   onFontIdChange,
   onFontSizeChange,
@@ -67,6 +73,9 @@ export function Editor({
   onStrokeColorChange,
   onStrokeWidthChange,
   onShadowChange,
+  onToggleAnimationEffect,
+  onAnimationSpeedChange,
+  onAnimationClear,
   onAutoFit,
   onApplyPreset,
 }: EditorProps) {
@@ -336,6 +345,16 @@ export function Editor({
             </button>
           ))}
         </div>
+      </Section>
+
+      {/* アニメーション */}
+      <Section title="アニメーション">
+        <AnimationSelector
+          animation={animation}
+          onToggleEffect={onToggleAnimationEffect}
+          onSpeedChange={onAnimationSpeedChange}
+          onClear={onAnimationClear}
+        />
       </Section>
     </div>
   )

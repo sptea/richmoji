@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, FontId, ShadowPresetId, StylePreset } from '../types/emoji'
+import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, DEFAULT_ANIMATION_STATE, FontId, ShadowPresetId, StylePreset, AnimationEffectId } from '../types/emoji'
 
 const STORAGE_KEY = 'richmoji_background_image'
 
@@ -130,6 +130,37 @@ export function useEmojiState() {
     }))
   }, [])
 
+  // アニメーション関連のセッター
+  const toggleAnimationEffect = useCallback((effectId: AnimationEffectId) => {
+    setState(prev => {
+      const effects = prev.animation.effects.includes(effectId)
+        ? prev.animation.effects.filter(id => id !== effectId)
+        : [...prev.animation.effects, effectId]
+      return {
+        ...prev,
+        animation: {
+          ...prev.animation,
+          effects,
+          enabled: effects.length > 0,
+        },
+      }
+    })
+  }, [])
+
+  const setAnimationSpeed = useCallback((speed: number) => {
+    setState(prev => ({
+      ...prev,
+      animation: { ...prev.animation, speed },
+    }))
+  }, [])
+
+  const clearAnimation = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      animation: DEFAULT_ANIMATION_STATE,
+    }))
+  }, [])
+
   const resetState = useCallback(() => {
     setState(DEFAULT_EMOJI_STATE)
   }, [])
@@ -166,6 +197,9 @@ export function useEmojiState() {
     setBackgroundImageOffset,
     setBackgroundImageOpacity,
     clearBackgroundImage,
+    toggleAnimationEffect,
+    setAnimationSpeed,
+    clearAnimation,
     resetState,
     applyPreset,
   }
