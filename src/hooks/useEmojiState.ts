@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
-import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, DEFAULT_ANIMATION_STATE, FontId, ShadowPresetId, StylePreset, AnimationEffectId } from '../types/emoji'
+import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, DEFAULT_ANIMATION_STATE, FontId, ShadowPresetId, StylePreset, AnimationEffectId, FONTS } from '../types/emoji'
+import { calculateAutoFitSize } from '../utils/canvas'
 
 const STORAGE_KEY = 'richmoji_background_image'
 
@@ -40,6 +41,27 @@ export function useEmojiState() {
     ...DEFAULT_EMOJI_STATE,
     ...loadBackgroundImageFromStorage(),
   }))
+  const [autoFit, setAutoFit] = useState(true)
+
+  // 自動フィットが有効な場合、テキストやフォントが変わったらサイズを再計算
+  useEffect(() => {
+    if (!autoFit) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = 128
+    canvas.height = 128
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const font = FONTS.find(f => f.id === state.font.id)
+    const fontFamily = font?.family || 'sans-serif'
+    const autoSize = calculateAutoFitSize(ctx, state.text, fontFamily)
+
+    setState(prev => {
+      if (prev.font.size === autoSize) return prev
+      return { ...prev, font: { ...prev.font, size: autoSize } }
+    })
+  }, [autoFit, state.text, state.font.id])
 
   // 背景画像が変更されたらLocalStorageに保存
   useEffect(() => {
@@ -180,6 +202,8 @@ export function useEmojiState() {
 
   return {
     state,
+    autoFit,
+    setAutoFit,
     setText,
     setFontId,
     setFontSize,

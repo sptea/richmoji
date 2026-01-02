@@ -8,6 +8,7 @@ interface EditorProps {
   fontSize: number
   bold: boolean
   italic: boolean
+  autoFit: boolean
   textColor: string
   textOpacity: number
   backgroundColor: string
@@ -22,6 +23,7 @@ interface EditorProps {
   onFontSizeChange: (size: number) => void
   onBoldToggle: () => void
   onItalicToggle: () => void
+  onAutoFitChange: (autoFit: boolean) => void
   onTextColorChange: (color: string) => void
   onTextOpacityChange: (opacity: number) => void
   onBackgroundColorChange: (color: string) => void
@@ -37,7 +39,6 @@ interface EditorProps {
   onToggleAnimationEffect: (effectId: AnimationEffectId) => void
   onAnimationSpeedChange: (speed: number) => void
   onAnimationClear: () => void
-  onAutoFit: () => void
   onApplyPreset: (preset: StylePreset) => void
 }
 
@@ -47,6 +48,7 @@ export function Editor({
   fontSize,
   bold,
   italic,
+  autoFit,
   textColor,
   textOpacity,
   backgroundColor,
@@ -61,6 +63,7 @@ export function Editor({
   onFontSizeChange,
   onBoldToggle,
   onItalicToggle,
+  onAutoFitChange,
   onTextColorChange,
   onTextOpacityChange,
   onBackgroundColorChange,
@@ -76,7 +79,6 @@ export function Editor({
   onToggleAnimationEffect,
   onAnimationSpeedChange,
   onAnimationClear,
-  onAutoFit,
   onApplyPreset,
 }: EditorProps) {
   const currentFont = FONTS.find(f => f.id === fontId)
@@ -86,15 +88,34 @@ export function Editor({
       {/* スタイルプリセット */}
       <Section title="スタイルプリセット">
         <div className="grid grid-cols-4 gap-2">
-          {STYLE_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => onApplyPreset(preset)}
-              className="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              {preset.name}
-            </button>
-          ))}
+          {STYLE_PRESETS.map((preset) => {
+            const presetFont = FONTS.find(f => f.id === preset.state.font?.id)
+            const fontFamily = presetFont?.family || 'sans-serif'
+            const isBold = preset.state.font?.bold ?? false
+            const textColor = preset.state.textColor || '#000000'
+            const bgColor = preset.state.backgroundColor || 'transparent'
+            const hasStroke = preset.state.stroke?.enabled
+            const strokeColor = preset.state.stroke?.color || '#000000'
+
+            return (
+              <button
+                key={preset.id}
+                onClick={() => onApplyPreset(preset)}
+                className="px-3 py-3 text-sm rounded-lg border border-gray-200 hover:border-blue-500 hover:scale-105 transition-all overflow-hidden"
+                style={{
+                  fontFamily: `"${fontFamily}", sans-serif`,
+                  fontWeight: isBold ? 'bold' : 'normal',
+                  color: textColor,
+                  backgroundColor: bgColor === 'transparent' ? '#f9fafb' : bgColor,
+                  textShadow: hasStroke
+                    ? `1px 1px 0 ${strokeColor}, -1px -1px 0 ${strokeColor}, 1px -1px 0 ${strokeColor}, -1px 1px 0 ${strokeColor}`
+                    : undefined,
+                }}
+              >
+                {preset.name}
+              </button>
+            )
+          })}
         </div>
       </Section>
 
@@ -111,24 +132,24 @@ export function Editor({
       {/* フォント選択 */}
       <Section title="フォント">
         <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {FONTS.map((font) => (
               <button
                 key={font.id}
                 onClick={() => onFontIdChange(font.id)}
-                className={`p-3 text-left rounded-lg border transition-colors ${
+                className={`p-2 text-left rounded-lg border transition-colors ${
                   fontId === font.id
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <span
-                  className="text-lg"
+                  className="text-base block"
                   style={{ fontFamily: `"${font.family}", sans-serif` }}
                 >
                   あア亜Aa
                 </span>
-                <span className="text-sm text-gray-500 ml-2">{font.name}</span>
+                <span className="text-xs text-gray-500">{font.name}</span>
               </button>
             ))}
           </div>
@@ -162,24 +183,30 @@ export function Editor({
 
       {/* 文字サイズ */}
       <Section title="文字サイズ">
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={autoFit}
+              onChange={(e) => onAutoFitChange(e.target.checked)}
+              className="w-5 h-5 rounded"
+            />
+            <span>自動フィット</span>
+          </label>
           <div className="flex items-center gap-4">
             <input
               type="range"
               min={8}
               max={128}
               value={fontSize}
-              onChange={(e) => onFontSizeChange(Number(e.target.value))}
+              onChange={(e) => {
+                if (autoFit) onAutoFitChange(false)
+                onFontSizeChange(Number(e.target.value))
+              }}
               className="flex-1"
             />
             <span className="w-12 text-right text-gray-700">{fontSize}px</span>
           </div>
-          <button
-            onClick={onAutoFit}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors"
-          >
-            自動フィット
-          </button>
         </div>
       </Section>
 

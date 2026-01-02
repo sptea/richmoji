@@ -222,7 +222,7 @@ export function calculateAutoFitSize(
   fontFamily: string,
   maxSize: number = 128,
   minSize: number = 8,
-  padding: number = 8
+  padding: number = 4
 ): number {
   if (!text) return 32
 

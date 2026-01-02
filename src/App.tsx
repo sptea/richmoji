@@ -2,13 +2,14 @@ import { useCallback } from 'react'
 import { Preview } from './components/Preview'
 import { Editor } from './components/Editor'
 import { useEmojiState } from './hooks/useEmojiState'
-import { FONTS } from './types/emoji'
-import { calculateAutoFitSize, downloadAsPng, loadImage, drawEmoji } from './utils/canvas'
+import { downloadAsPng, loadImage, drawEmoji } from './utils/canvas'
 import { downloadAsGif } from './utils/gif'
 
 function App() {
   const {
     state,
+    autoFit,
+    setAutoFit,
     setText,
     setFontId,
     setFontSize,
@@ -63,19 +64,6 @@ function App() {
     }
   }, [state])
 
-  const handleAutoFit = useCallback(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 128
-    canvas.height = 128
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const font = FONTS.find(f => f.id === state.font.id)
-    const fontFamily = font?.family || 'sans-serif'
-    const newSize = calculateAutoFitSize(ctx, state.text, fontFamily)
-    setFontSize(newSize)
-  }, [state.text, state.font.id, setFontSize])
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* 広い画面: 2カラム / 狭い画面: 1カラム + フローティングプレビュー */}
@@ -90,6 +78,7 @@ function App() {
               fontSize={state.font.size}
               bold={state.font.bold}
               italic={state.font.italic}
+              autoFit={autoFit}
               textColor={state.textColor}
               textOpacity={state.textOpacity}
               backgroundColor={state.backgroundColor}
@@ -104,6 +93,7 @@ function App() {
               onFontSizeChange={setFontSize}
               onBoldToggle={toggleBold}
               onItalicToggle={toggleItalic}
+              onAutoFitChange={setAutoFit}
               onTextColorChange={setTextColor}
               onTextOpacityChange={setTextOpacity}
               onBackgroundColorChange={setBackgroundColor}
@@ -119,7 +109,6 @@ function App() {
               onToggleAnimationEffect={toggleAnimationEffect}
               onAnimationSpeedChange={setAnimationSpeed}
               onAnimationClear={clearAnimation}
-              onAutoFit={handleAutoFit}
               onApplyPreset={applyPreset}
             />
           </div>

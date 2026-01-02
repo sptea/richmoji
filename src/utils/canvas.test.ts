@@ -43,7 +43,7 @@ describe('emoji.ts 型定義', () => {
 
   describe('DEFAULT_EMOJI_STATE', () => {
     it('デフォルト値が正しく設定されている', () => {
-      expect(DEFAULT_EMOJI_STATE.text).toBe('RichMoji')
+      expect(DEFAULT_EMOJI_STATE.text).toBe('りち\nもじ')
       expect(DEFAULT_EMOJI_STATE.font.id).toBe('noto-sans-jp')
       expect(DEFAULT_EMOJI_STATE.backgroundColor).toBe('transparent')
       expect(DEFAULT_EMOJI_STATE.stroke.enabled).toBe(false)

@@ -96,11 +96,11 @@ export const DEFAULT_BACKGROUND_IMAGE: BackgroundImage = {
 
 // デフォルト値
 export const DEFAULT_EMOJI_STATE: EmojiState = {
-  text: 'RichMoji',
+  text: 'りち\nもじ',
   font: {
     id: 'noto-sans-jp',
     size: 32,
-    bold: false,
+    bold: true,
     italic: false,
   },
   textColor: '#000000',
