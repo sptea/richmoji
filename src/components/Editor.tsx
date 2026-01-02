@@ -1,87 +1,26 @@
-import { FONTS, PRESET_COLORS, STYLE_PRESETS, FontId, ShadowPresetId, StylePreset, BackgroundImage, AnimationState, AnimationEffectId } from '../types/emoji'
+import { FONTS, STYLE_PRESETS } from '../types/emoji'
+import { EditorProps } from '../types/editor'
 import { ImageUpload } from './ImageUpload'
 import { AnimationSelector } from './AnimationSelector'
 
-interface EditorProps {
-  text: string
-  fontId: FontId
-  fontSize: number
-  bold: boolean
-  italic: boolean
-  autoFit: boolean
-  textColor: string
-  textOpacity: number
-  backgroundColor: string
-  backgroundImage: BackgroundImage
-  strokeEnabled: boolean
-  strokeColor: string
-  strokeWidth: number
-  shadow: ShadowPresetId
-  animation: AnimationState
-  onTextChange: (text: string) => void
-  onFontIdChange: (id: FontId) => void
-  onFontSizeChange: (size: number) => void
-  onBoldToggle: () => void
-  onItalicToggle: () => void
-  onAutoFitChange: (autoFit: boolean) => void
-  onTextColorChange: (color: string) => void
-  onTextOpacityChange: (opacity: number) => void
-  onBackgroundColorChange: (color: string) => void
-  onBackgroundImageChange: (data: string | null) => void
-  onBackgroundImageScaleChange: (scale: number) => void
-  onBackgroundImageOffsetChange: (offsetX: number, offsetY: number) => void
-  onBackgroundImageOpacityChange: (opacity: number) => void
-  onBackgroundImageClear: () => void
-  onStrokeEnabledChange: (enabled: boolean) => void
-  onStrokeColorChange: (color: string) => void
-  onStrokeWidthChange: (width: number) => void
-  onShadowChange: (shadow: ShadowPresetId) => void
-  onToggleAnimationEffect: (effectId: AnimationEffectId) => void
-  onAnimationSpeedChange: (speed: number) => void
-  onAnimationClear: () => void
-  onApplyPreset: (preset: StylePreset) => void
-}
-
 export function Editor({
-  text,
-  fontId,
-  fontSize,
-  bold,
-  italic,
+  font,
+  fontActions,
   autoFit,
-  textColor,
-  textOpacity,
-  backgroundColor,
-  backgroundImage,
-  strokeEnabled,
-  strokeColor,
-  strokeWidth,
-  shadow,
-  animation,
-  onTextChange,
-  onFontIdChange,
-  onFontSizeChange,
-  onBoldToggle,
-  onItalicToggle,
   onAutoFitChange,
-  onTextColorChange,
+  textOpacity,
   onTextOpacityChange,
-  onBackgroundColorChange,
-  onBackgroundImageChange,
-  onBackgroundImageScaleChange,
-  onBackgroundImageOffsetChange,
-  onBackgroundImageOpacityChange,
-  onBackgroundImageClear,
-  onStrokeEnabledChange,
-  onStrokeColorChange,
-  onStrokeWidthChange,
+  stroke,
+  strokeActions,
+  shadow,
   onShadowChange,
-  onToggleAnimationEffect,
-  onAnimationSpeedChange,
-  onAnimationClear,
+  backgroundImage,
+  backgroundImageActions,
+  animation,
+  animationActions,
   onApplyPreset,
 }: EditorProps) {
-  const currentFont = FONTS.find(f => f.id === fontId)
+  const currentFont = FONTS.find(f => f.id === font.id)
 
   return (
     <div className="bg-white rounded-lg shadow p-6 space-y-6">
@@ -119,37 +58,29 @@ export function Editor({
         </div>
       </Section>
 
-      {/* テキスト入力 */}
-      <Section title="テキスト">
-        <textarea
-          value={text}
-          onChange={(e) => onTextChange(e.target.value)}
-          placeholder="絵文字にするテキストを入力..."
-          className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </Section>
+      <GroupHeader title="文字" />
 
       {/* フォント選択 */}
       <Section title="フォント">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            {FONTS.map((font) => (
+            {FONTS.map((f) => (
               <button
-                key={font.id}
-                onClick={() => onFontIdChange(font.id)}
+                key={f.id}
+                onClick={() => fontActions.onIdChange(f.id)}
                 className={`p-2 text-left rounded-lg border transition-colors ${
-                  fontId === font.id
+                  font.id === f.id
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <span
                   className="text-base block"
-                  style={{ fontFamily: `"${font.family}", sans-serif` }}
+                  style={{ fontFamily: `"${f.family}", sans-serif` }}
                 >
                   あア亜Aa
                 </span>
-                <span className="text-xs text-gray-500">{font.name}</span>
+                <span className="text-xs text-gray-500">{f.name}</span>
               </button>
             ))}
           </div>
@@ -157,10 +88,10 @@ export function Editor({
           {/* 太字・斜体 */}
           <div className="flex gap-2">
             <button
-              onClick={onBoldToggle}
+              onClick={fontActions.onBoldToggle}
               disabled={currentFont?.noBold}
               className={`px-4 py-2 rounded font-bold transition-colors ${
-                bold
+                font.bold
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               } ${currentFont?.noBold ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -168,9 +99,9 @@ export function Editor({
               B
             </button>
             <button
-              onClick={onItalicToggle}
+              onClick={fontActions.onItalicToggle}
               className={`px-4 py-2 rounded italic transition-colors ${
-                italic
+                font.italic
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
@@ -181,138 +112,49 @@ export function Editor({
         </div>
       </Section>
 
-      {/* 文字サイズ */}
-      <Section title="文字サイズ">
-        <div className="space-y-3">
+      {/* 文字サイズ・透明度 */}
+      <Section title="文字サイズ・透明度">
+        <div className="space-y-2">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={autoFit}
               onChange={(e) => onAutoFitChange(e.target.checked)}
-              className="w-5 h-5 rounded"
+              className="w-4 h-4 rounded"
             />
-            <span>自動フィット</span>
+            <span className="text-sm">自動フィット</span>
           </label>
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min={8}
-              max={128}
-              value={fontSize}
-              onChange={(e) => {
-                if (autoFit) onAutoFitChange(false)
-                onFontSizeChange(Number(e.target.value))
-              }}
-              className="flex-1"
-            />
-            <span className="w-12 text-right text-gray-700">{fontSize}px</span>
-          </div>
-        </div>
-      </Section>
-
-      {/* 文字色 */}
-      <Section title="文字色">
-        <div className="space-y-3">
-          <div className="grid grid-cols-8 gap-2">
-            {PRESET_COLORS.map((color) => (
-              <button
-                key={color}
-                onClick={() => onTextColorChange(color)}
-                className={`w-8 h-8 rounded border-2 transition-transform hover:scale-110 ${
-                  textColor === color ? 'border-blue-500' : 'border-gray-300'
-                }`}
-                style={{ backgroundColor: color }}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 w-8">サイズ</span>
+              <input
+                type="range"
+                min={8}
+                max={128}
+                value={font.size}
+                onChange={(e) => {
+                  if (autoFit) onAutoFitChange(false)
+                  fontActions.onSizeChange(Number(e.target.value))
+                }}
+                className="flex-1"
               />
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={textColor}
-              onChange={(e) => onTextColorChange(e.target.value)}
-              className="w-10 h-10 rounded cursor-pointer"
-            />
-            <input
-              type="text"
-              value={textColor}
-              onChange={(e) => onTextColorChange(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">透明度</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={textOpacity}
-              onChange={(e) => onTextOpacityChange(Number(e.target.value))}
-              className="flex-1"
-            />
-            <span className="w-12 text-right text-gray-700">{Math.round(textOpacity * 100)}%</span>
-          </div>
-        </div>
-      </Section>
-
-      {/* 背景色 */}
-      <Section title="背景色">
-        <div className="space-y-3">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => onBackgroundColorChange('transparent')}
-              className={`px-3 py-2 rounded border-2 transition-colors ${
-                backgroundColor === 'transparent'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300'
-              }`}
-              style={{
-                backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
-                backgroundSize: '8px 8px',
-                backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
-              }}
-            >
-              透明
-            </button>
-            {PRESET_COLORS.slice(0, 8).map((color) => (
-              <button
-                key={color}
-                onClick={() => onBackgroundColorChange(color)}
-                className={`w-10 h-10 rounded border-2 transition-transform hover:scale-110 ${
-                  backgroundColor === color ? 'border-blue-500' : 'border-gray-300'
-                }`}
-                style={{ backgroundColor: color }}
+              <span className="w-10 text-right text-xs text-gray-700">{font.size}px</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 w-8">透明度</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={textOpacity}
+                onChange={(e) => onTextOpacityChange(Number(e.target.value))}
+                className="flex-1"
               />
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
-              onChange={(e) => onBackgroundColorChange(e.target.value)}
-              className="w-10 h-10 rounded cursor-pointer"
-            />
-            <input
-              type="text"
-              value={backgroundColor}
-              onChange={(e) => onBackgroundColorChange(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded"
-              placeholder="transparent or #ffffff"
-            />
+              <span className="w-10 text-right text-xs text-gray-700">{Math.round(textOpacity * 100)}%</span>
+            </div>
           </div>
         </div>
-      </Section>
-
-      {/* 背景画像 */}
-      <Section title="背景画像">
-        <ImageUpload
-          backgroundImage={backgroundImage}
-          onImageChange={onBackgroundImageChange}
-          onScaleChange={onBackgroundImageScaleChange}
-          onOffsetChange={onBackgroundImageOffsetChange}
-          onOpacityChange={onBackgroundImageOpacityChange}
-          onClear={onBackgroundImageClear}
-        />
       </Section>
 
       {/* 縁取り */}
@@ -321,20 +163,20 @@ export function Editor({
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={strokeEnabled}
-              onChange={(e) => onStrokeEnabledChange(e.target.checked)}
+              checked={stroke.enabled}
+              onChange={(e) => strokeActions.onEnabledChange(e.target.checked)}
               className="w-5 h-5 rounded"
             />
             <span>縁取りを有効にする</span>
           </label>
-          {strokeEnabled && (
+          {stroke.enabled && (
             <>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">色</span>
                 <input
                   type="color"
-                  value={strokeColor}
-                  onChange={(e) => onStrokeColorChange(e.target.value)}
+                  value={stroke.color}
+                  onChange={(e) => strokeActions.onColorChange(e.target.value)}
                   className="w-10 h-10 rounded cursor-pointer"
                 />
               </div>
@@ -344,11 +186,11 @@ export function Editor({
                   type="range"
                   min={1}
                   max={5}
-                  value={strokeWidth}
-                  onChange={(e) => onStrokeWidthChange(Number(e.target.value))}
+                  value={stroke.width}
+                  onChange={(e) => strokeActions.onWidthChange(Number(e.target.value))}
                   className="flex-1"
                 />
-                <span className="w-12 text-right text-gray-700">{strokeWidth}px</span>
+                <span className="w-12 text-right text-gray-700">{stroke.width}px</span>
               </div>
             </>
           )}
@@ -374,13 +216,29 @@ export function Editor({
         </div>
       </Section>
 
+      <GroupHeader title="背景" />
+
+      {/* 背景画像 */}
+      <Section title="背景画像">
+        <ImageUpload
+          backgroundImage={backgroundImage}
+          onImageChange={backgroundImageActions.onChange}
+          onScaleChange={backgroundImageActions.onScaleChange}
+          onOffsetChange={backgroundImageActions.onOffsetChange}
+          onOpacityChange={backgroundImageActions.onOpacityChange}
+          onClear={backgroundImageActions.onClear}
+        />
+      </Section>
+
+      <GroupHeader title="効果" />
+
       {/* アニメーション */}
       <Section title="アニメーション">
         <AnimationSelector
           animation={animation}
-          onToggleEffect={onToggleAnimationEffect}
-          onSpeedChange={onAnimationSpeedChange}
-          onClear={onAnimationClear}
+          onToggleEffect={animationActions.onToggleEffect}
+          onSpeedChange={animationActions.onSpeedChange}
+          onClear={animationActions.onClear}
         />
       </Section>
     </div>
@@ -392,6 +250,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div>
       <h3 className="text-sm font-semibold text-gray-700 mb-2">{title}</h3>
       {children}
+    </div>
+  )
+}
+
+function GroupHeader({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-2">
+      <div className="h-px flex-1 bg-gray-200" />
+      <span className="text-xs text-gray-400 font-medium">{title}</span>
+      <div className="h-px flex-1 bg-gray-200" />
     </div>
   )
 }

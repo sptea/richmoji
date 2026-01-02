@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, DEFAULT_ANIMATION_STATE, FontId, ShadowPresetId, StylePreset, AnimationEffectId, FONTS } from '../types/emoji'
 import { calculateAutoFitSize } from '../utils/canvas'
+import { FontActions, StrokeActions, BackgroundImageActions, AnimationActions } from '../types/editor'
 
 const STORAGE_KEY = 'richmoji_background_image'
 
@@ -200,31 +201,48 @@ export function useEmojiState() {
     })
   }, [])
 
+  // グループ化されたアクション（useMemoで参照を安定化）
+  const fontActions: FontActions = useMemo(() => ({
+    onIdChange: setFontId,
+    onSizeChange: setFontSize,
+    onBoldToggle: toggleBold,
+    onItalicToggle: toggleItalic,
+  }), [setFontId, setFontSize, toggleBold, toggleItalic])
+
+  const strokeActions: StrokeActions = useMemo(() => ({
+    onEnabledChange: setStrokeEnabled,
+    onColorChange: setStrokeColor,
+    onWidthChange: setStrokeWidth,
+  }), [setStrokeEnabled, setStrokeColor, setStrokeWidth])
+
+  const backgroundImageActions: BackgroundImageActions = useMemo(() => ({
+    onChange: setBackgroundImageData,
+    onScaleChange: setBackgroundImageScale,
+    onOffsetChange: setBackgroundImageOffset,
+    onOpacityChange: setBackgroundImageOpacity,
+    onClear: clearBackgroundImage,
+  }), [setBackgroundImageData, setBackgroundImageScale, setBackgroundImageOffset, setBackgroundImageOpacity, clearBackgroundImage])
+
+  const animationActions: AnimationActions = useMemo(() => ({
+    onToggleEffect: toggleAnimationEffect,
+    onSpeedChange: setAnimationSpeed,
+    onClear: clearAnimation,
+  }), [toggleAnimationEffect, setAnimationSpeed, clearAnimation])
+
   return {
     state,
     autoFit,
     setAutoFit,
     setText,
-    setFontId,
-    setFontSize,
-    toggleBold,
-    toggleItalic,
     setTextColor,
     setTextOpacity,
     setBackgroundColor,
-    setStrokeEnabled,
-    setStrokeColor,
-    setStrokeWidth,
+    fontActions,
+    strokeActions,
+    backgroundImageActions,
+    animationActions,
     setShadow,
-    setBackgroundImageData,
-    setBackgroundImageScale,
-    setBackgroundImageOffset,
-    setBackgroundImageOpacity,
-    clearBackgroundImage,
-    toggleAnimationEffect,
-    setAnimationSpeed,
-    clearAnimation,
-    resetState,
     applyPreset,
+    resetState,
   }
 }
