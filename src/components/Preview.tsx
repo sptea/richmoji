@@ -23,12 +23,15 @@ interface PreviewProps {
   fontSize: number
   autoFit: boolean
   textOpacity: number
+  textOffset: { x: number; y: number }
   onTextChange: (text: string) => void
   onTextColorChange: (color: string) => void
   onBackgroundColorChange: (color: string) => void
   onFontSizeChange: (size: number) => void
   onAutoFitChange: (autoFit: boolean) => void
   onTextOpacityChange: (opacity: number) => void
+  onTextOffsetChange: (offset: { x: number; y: number }) => void
+  onTextOffsetReset: () => void
 }
 
 type BackgroundType = 'checker' | 'white' | 'dark'
@@ -43,18 +46,25 @@ export function Preview({
   fontSize,
   autoFit,
   textOpacity,
+  textOffset,
   onTextChange,
   onTextColorChange,
   onBackgroundColorChange,
   onFontSizeChange,
   onAutoFitChange,
   onTextOpacityChange,
+  onTextOffsetChange,
+  onTextOffsetReset,
 }: PreviewProps) {
   // 3つの背景用canvas refs
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([null, null, null])
   const [bgImageElement, setBgImageElement] = useState<HTMLImageElement | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const startTimeRef = useRef<number | null>(null)
+
+  // ドラッグ状態
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null)
 
   // 背景画像を読み込む
   useEffect(() => {
@@ -142,6 +152,51 @@ export function Preview({
         return { backgroundColor: '#1a1a1a' }
     }
   }
+
+  // ドラッグハンドラ
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent, canvasSize: number) => {
+    e.preventDefault()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    // キャンバスサイズから128pxへのスケール
+    const scale = 128 / canvasSize
+    dragStartRef.current = {
+      x: clientX,
+      y: clientY,
+      offsetX: textOffset.x,
+      offsetY: textOffset.y,
+    }
+    setIsDragging(true)
+
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      if (!dragStartRef.current) return
+      const moveX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX
+      const moveY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY
+      const deltaX = (moveX - dragStartRef.current.x) * scale
+      const deltaY = (moveY - dragStartRef.current.y) * scale
+      // -64 から 64 の範囲に制限
+      const newX = Math.max(-64, Math.min(64, dragStartRef.current.offsetX + deltaX))
+      const newY = Math.max(-64, Math.min(64, dragStartRef.current.offsetY + deltaY))
+      onTextOffsetChange({ x: newX, y: newY })
+    }
+
+    const handleEnd = () => {
+      setIsDragging(false)
+      dragStartRef.current = null
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleEnd)
+      window.removeEventListener('touchmove', handleMove)
+      window.removeEventListener('touchend', handleEnd)
+    }
+
+    window.addEventListener('mousemove', handleMove)
+    window.addEventListener('mouseup', handleEnd)
+    window.addEventListener('touchmove', handleMove)
+    window.addEventListener('touchend', handleEnd)
+  }
+
+  // 位置がオフセットされているか
+  const hasOffset = textOffset.x !== 0 || textOffset.y !== 0
 
   // サイズ・透明度コントロール（インラインで使用）
   const sizeOpacityControls = (
@@ -289,21 +344,36 @@ export function Preview({
         {(['checker', 'white', 'dark'] as const).map((type, index) => (
           <div
             key={type}
-            className="rounded-lg overflow-hidden border border-gray-300"
+            className={`rounded-lg overflow-hidden border transition-colors ${isDragging ? 'border-blue-400' : 'border-gray-300'}`}
             style={{
               width: size,
               height: size,
+              cursor: 'move',
               ...getBackgroundStyle(type),
             }}
+            onMouseDown={(e) => handleDragStart(e, size)}
+            onTouchStart={(e) => handleDragStart(e, size)}
           >
             <canvas
               width={128}
               height={128}
-              style={{ width: size, height: size }}
+              style={{ width: size, height: size, pointerEvents: 'none' }}
               ref={el => { canvasRefs.current[index] = el }}
             />
           </div>
         ))}
+      </div>
+      {/* 注釈とリセットボタン */}
+      <div className="flex items-center justify-between mt-1.5 px-1">
+        <span className="text-xs text-gray-400">ドラッグで位置調整</span>
+        {hasOffset && (
+          <button
+            onClick={onTextOffsetReset}
+            className="text-xs text-blue-500 hover:text-blue-600"
+          >
+            中央に戻す
+          </button>
+        )}
       </div>
     </div>
   )

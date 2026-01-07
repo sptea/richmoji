@@ -63,6 +63,18 @@ export interface BackgroundImage {
   opacity: number      // 透明度 (0 - 1)
 }
 
+// テキスト位置オフセット
+export interface TextOffset {
+  x: number  // X方向オフセット (-64 - 64)
+  y: number  // Y方向オフセット (-64 - 64)
+}
+
+// デフォルトテキスト位置
+export const DEFAULT_TEXT_OFFSET: TextOffset = {
+  x: 0,
+  y: 0,
+}
+
 // 絵文字の状態
 export interface EmojiState {
   text: string
@@ -74,6 +86,7 @@ export interface EmojiState {
   }
   textColor: string
   textOpacity: number
+  textOffset: TextOffset
   backgroundColor: string
   backgroundImage: BackgroundImage
   stroke: {
@@ -105,6 +118,7 @@ export const DEFAULT_EMOJI_STATE: EmojiState = {
   },
   textColor: '#000000',
   textOpacity: 1,
+  textOffset: DEFAULT_TEXT_OFFSET,
   backgroundColor: 'transparent',
   backgroundImage: DEFAULT_BACKGROUND_IMAGE,
   stroke: {

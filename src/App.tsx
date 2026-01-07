@@ -13,6 +13,8 @@ function App() {
     setText,
     setTextColor,
     setTextOpacity,
+    setTextOffset,
+    resetTextOffset,
     setBackgroundColor,
     fontActions,
     strokeActions,
@@ -96,12 +98,15 @@ function App() {
                 fontSize={state.font.size}
                 autoFit={autoFit}
                 textOpacity={state.textOpacity}
+                textOffset={state.textOffset}
                 onTextChange={setText}
                 onTextColorChange={setTextColor}
                 onBackgroundColorChange={setBackgroundColor}
                 onFontSizeChange={fontActions.onSizeChange}
                 onAutoFitChange={setAutoFit}
                 onTextOpacityChange={setTextOpacity}
+                onTextOffsetChange={setTextOffset}
+                onTextOffsetReset={resetTextOffset}
               />
             </div>
           </div>
@@ -120,12 +125,15 @@ function App() {
           fontSize={state.font.size}
           autoFit={autoFit}
           textOpacity={state.textOpacity}
+          textOffset={state.textOffset}
           onTextChange={setText}
           onTextColorChange={setTextColor}
           onBackgroundColorChange={setBackgroundColor}
           onFontSizeChange={fontActions.onSizeChange}
           onAutoFitChange={setAutoFit}
           onTextOpacityChange={setTextOpacity}
+          onTextOffsetChange={setTextOffset}
+          onTextOffsetReset={resetTextOffset}
         />
       </div>
     </div>

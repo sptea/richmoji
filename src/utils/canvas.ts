@@ -64,7 +64,7 @@ export function drawEmoji(
   bgImageElement?: HTMLImageElement,
   transform: AnimationTransform = DEFAULT_TRANSFORM
 ): void {
-  const { text, font, textColor, textOpacity, backgroundColor, backgroundImage, stroke, shadow } = state
+  const { text, font, textColor, textOpacity, textOffset, backgroundColor, backgroundImage, stroke, shadow } = state
 
   // キャンバスをクリア
   ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
@@ -102,7 +102,8 @@ export function drawEmoji(
   const lines = displayText.split('\n')
   const lineHeight = font.size * 1.2
   const totalHeight = lines.length * lineHeight
-  const startY = (CANVAS_SIZE - totalHeight) / 2 + lineHeight / 2
+  const startY = (CANVAS_SIZE - totalHeight) / 2 + lineHeight / 2 + textOffset.y
+  const baseX = CANVAS_SIZE / 2 + textOffset.x
 
   // 色相シフトを適用
   const effectiveTextColor = transform.hueShift !== 0
@@ -135,12 +136,11 @@ export function drawEmoji(
 
   // 波打ち効果の場合は文字ごとに描画
   if (transform.charOffsets && transform.charOffsets.length > 0) {
-    drawWaveText(ctx, lines, startY, lineHeight, effectiveTextColor, textOpacity * transform.opacity, stroke, transform.charOffsets)
+    drawWaveText(ctx, lines, startY, lineHeight, effectiveTextColor, textOpacity * transform.opacity, stroke, transform.charOffsets, baseX)
   } else {
     // 各行を描画
     lines.forEach((line, index) => {
       const y = startY + index * lineHeight
-      const x = CANVAS_SIZE / 2
 
       // 縁取り
       if (stroke.enabled) {
@@ -148,13 +148,13 @@ export function drawEmoji(
         ctx.lineWidth = stroke.width * 2
         ctx.lineJoin = 'round'
         ctx.miterLimit = 2
-        ctx.strokeText(line, x, y)
+        ctx.strokeText(line, baseX, y)
       }
 
       // テキスト本体
       ctx.fillStyle = effectiveTextColor
       ctx.globalAlpha = textOpacity * transform.opacity
-      ctx.fillText(line, x, y)
+      ctx.fillText(line, baseX, y)
       ctx.globalAlpha = 1
     })
   }
@@ -177,15 +177,17 @@ function drawWaveText(
   textColor: string,
   opacity: number,
   stroke: EmojiState['stroke'],
-  charOffsets: number[]
+  charOffsets: number[],
+  baseX: number
 ): void {
   let charIndex = 0
+  const offsetX = baseX - CANVAS_SIZE / 2
 
   lines.forEach((line, lineIndex) => {
     const y = startY + lineIndex * lineHeight
     const chars = line.split('')
     const totalWidth = ctx.measureText(line).width
-    let x = (CANVAS_SIZE - totalWidth) / 2
+    let x = (CANVAS_SIZE - totalWidth) / 2 + offsetX
 
     chars.forEach((char) => {
       const charWidth = ctx.measureText(char).width
