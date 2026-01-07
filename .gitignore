@@ -28,3 +28,7 @@ coverage
 # claude
 CLAUDE.md
 docs/
+
+# Github actions（グローバルの.* 除外を上書き）
+!.github/
+!.github/workflows/
