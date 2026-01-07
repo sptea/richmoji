@@ -20,14 +20,36 @@ interface PreviewProps {
   text: string
   textColor: string
   backgroundColor: string
+  fontSize: number
+  autoFit: boolean
+  textOpacity: number
   onTextChange: (text: string) => void
   onTextColorChange: (color: string) => void
   onBackgroundColorChange: (color: string) => void
+  onFontSizeChange: (size: number) => void
+  onAutoFitChange: (autoFit: boolean) => void
+  onTextOpacityChange: (opacity: number) => void
 }
 
 type BackgroundType = 'checker' | 'white' | 'dark'
 
-export function Preview({ state, onDownload, compact = false, text, textColor, backgroundColor, onTextChange, onTextColorChange, onBackgroundColorChange }: PreviewProps) {
+export function Preview({
+  state,
+  onDownload,
+  compact = false,
+  text,
+  textColor,
+  backgroundColor,
+  fontSize,
+  autoFit,
+  textOpacity,
+  onTextChange,
+  onTextColorChange,
+  onBackgroundColorChange,
+  onFontSizeChange,
+  onAutoFitChange,
+  onTextOpacityChange,
+}: PreviewProps) {
   // 3つの背景用canvas refs
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([null, null, null])
   const [bgImageElement, setBgImageElement] = useState<HTMLImageElement | null>(null)
@@ -121,8 +143,53 @@ export function Preview({ state, onDownload, compact = false, text, textColor, b
     }
   }
 
-  // 色タイルコンポーネント（共通）
-  const ColorTiles = () => (
+  // サイズ・透明度コントロール（インラインで使用）
+  const sizeOpacityControls = (
+    <div className="mb-3 space-y-1.5">
+      <div className="flex items-center gap-2">
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={autoFit}
+            onChange={(e) => onAutoFitChange(e.target.checked)}
+            className="w-3.5 h-3.5 rounded"
+          />
+          <span className="text-xs text-gray-500">自動</span>
+        </label>
+        <div className="flex-1 flex items-center gap-1">
+          <span className="text-xs text-gray-500">サイズ</span>
+          <input
+            type="range"
+            min={8}
+            max={128}
+            value={fontSize}
+            onChange={(e) => {
+              if (autoFit) onAutoFitChange(false)
+              onFontSizeChange(Number(e.target.value))
+            }}
+            className="flex-1"
+          />
+          <span className="text-xs text-gray-500 w-8 text-right">{fontSize}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500">透明度</span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={textOpacity}
+          onChange={(e) => onTextOpacityChange(Number(e.target.value))}
+          className="flex-1"
+        />
+        <span className="text-xs text-gray-500 w-8 text-right">{Math.round(textOpacity * 100)}%</span>
+      </div>
+    </div>
+  )
+
+  // 色タイル（インラインで使用）
+  const colorTiles = (
     <div className="grid grid-cols-2 gap-2 mb-3">
       {/* 文字色 */}
       <div className="space-y-1">
@@ -207,9 +274,9 @@ export function Preview({ state, onDownload, compact = false, text, textColor, b
     </div>
   )
 
-  // 3背景プレビューコンポーネント（共通）
+  // 3背景プレビュー（関数として定義、再マウント防止）
   const backgroundLabels = { checker: '透過', white: 'ライト', dark: 'ダーク' } as const
-  const TriplePreview = ({ size = 80 }: { size?: number }) => (
+  const renderTriplePreview = (size: number) => (
     <div className="mb-3">
       <div className="flex gap-1 justify-center mb-1">
         {(['checker', 'white', 'dark'] as const).map((type) => (
@@ -259,10 +326,13 @@ export function Preview({ state, onDownload, compact = false, text, textColor, b
         />
 
         {/* 3背景プレビュー */}
-        <TriplePreview size={64} />
+        {renderTriplePreview(64)}
 
         {/* 色タイル */}
-        <ColorTiles />
+        {colorTiles}
+
+        {/* サイズ・透明度 */}
+        {sizeOpacityControls}
 
         {/* ダウンロードボタン */}
         <button
@@ -291,10 +361,13 @@ export function Preview({ state, onDownload, compact = false, text, textColor, b
       />
 
       {/* 3背景プレビュー */}
-      <TriplePreview size={80} />
+      {renderTriplePreview(80)}
 
       {/* 色タイル */}
-      <ColorTiles />
+      {colorTiles}
+
+      {/* サイズ・透明度 */}
+      {sizeOpacityControls}
 
       {/* ダウンロードボタン */}
       <button

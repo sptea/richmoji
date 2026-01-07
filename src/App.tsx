@@ -71,10 +71,6 @@ function App() {
             <Editor
               font={state.font}
               fontActions={fontActions}
-              autoFit={autoFit}
-              onAutoFitChange={setAutoFit}
-              textOpacity={state.textOpacity}
-              onTextOpacityChange={setTextOpacity}
               stroke={state.stroke}
               strokeActions={strokeActions}
               shadow={state.shadow}
@@ -97,9 +93,15 @@ function App() {
                 text={state.text}
                 textColor={state.textColor}
                 backgroundColor={state.backgroundColor}
+                fontSize={state.font.size}
+                autoFit={autoFit}
+                textOpacity={state.textOpacity}
                 onTextChange={setText}
                 onTextColorChange={setTextColor}
                 onBackgroundColorChange={setBackgroundColor}
+                onFontSizeChange={fontActions.onSizeChange}
+                onAutoFitChange={setAutoFit}
+                onTextOpacityChange={setTextOpacity}
               />
             </div>
           </div>
@@ -115,9 +117,15 @@ function App() {
           text={state.text}
           textColor={state.textColor}
           backgroundColor={state.backgroundColor}
+          fontSize={state.font.size}
+          autoFit={autoFit}
+          textOpacity={state.textOpacity}
           onTextChange={setText}
           onTextColorChange={setTextColor}
           onBackgroundColorChange={setBackgroundColor}
+          onFontSizeChange={fontActions.onSizeChange}
+          onAutoFitChange={setAutoFit}
+          onTextOpacityChange={setTextOpacity}
         />
       </div>
     </div>

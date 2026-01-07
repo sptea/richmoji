@@ -52,12 +52,6 @@ export interface EditorProps {
   // フォント
   font: FontSettings
   fontActions: FontActions
-  // 自動フィット
-  autoFit: boolean
-  onAutoFitChange: (autoFit: boolean) => void
-  // テキスト透明度
-  textOpacity: number
-  onTextOpacityChange: (opacity: number) => void
   // 縁取り
   stroke: StrokeSettings
   strokeActions: StrokeActions

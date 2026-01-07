@@ -6,10 +6,6 @@ import { AnimationSelector } from './AnimationSelector'
 export function Editor({
   font,
   fontActions,
-  autoFit,
-  onAutoFitChange,
-  textOpacity,
-  onTextOpacityChange,
   stroke,
   strokeActions,
   shadow,
@@ -63,24 +59,24 @@ export function Editor({
       {/* フォント選択 */}
       <Section title="フォント">
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             {FONTS.map((f) => (
               <button
                 key={f.id}
                 onClick={() => fontActions.onIdChange(f.id)}
-                className={`p-2 text-left rounded-lg border transition-colors ${
+                className={`px-2 py-1 text-left rounded border-2 transition-colors ${
                   font.id === f.id
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <span
-                  className="text-base block"
+                <div
+                  className="text-sm font-medium leading-tight"
                   style={{ fontFamily: `"${f.family}", sans-serif` }}
                 >
-                  あア亜Aa
-                </span>
-                <span className="text-xs text-gray-500">{f.name}</span>
+                  あア亜
+                </div>
+                <div className="text-xs text-gray-500 truncate leading-tight">{f.name}</div>
               </button>
             ))}
           </div>
@@ -108,51 +104,6 @@ export function Editor({
             >
               I
             </button>
-          </div>
-        </div>
-      </Section>
-
-      {/* 文字サイズ・透明度 */}
-      <Section title="文字サイズ・透明度">
-        <div className="space-y-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={autoFit}
-              onChange={(e) => onAutoFitChange(e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-            <span className="text-sm">自動フィット</span>
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-8">サイズ</span>
-              <input
-                type="range"
-                min={8}
-                max={128}
-                value={font.size}
-                onChange={(e) => {
-                  if (autoFit) onAutoFitChange(false)
-                  fontActions.onSizeChange(Number(e.target.value))
-                }}
-                className="flex-1"
-              />
-              <span className="w-10 text-right text-xs text-gray-700">{font.size}px</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-8">透明度</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={textOpacity}
-                onChange={(e) => onTextOpacityChange(Number(e.target.value))}
-                className="flex-1"
-              />
-              <span className="w-10 text-right text-xs text-gray-700">{Math.round(textOpacity * 100)}%</span>
-            </div>
           </div>
         </div>
       </Section>
@@ -199,15 +150,15 @@ export function Editor({
 
       {/* 影 */}
       <Section title="影">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5">
           {(['none', 'soft', 'hard', 'long'] as const).map((preset) => (
             <button
               key={preset}
               onClick={() => onShadowChange(preset)}
-              className={`px-4 py-2 rounded border-2 transition-colors ${
+              className={`px-3 py-1 rounded border-2 transition-colors text-sm ${
                 shadow === preset
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400'
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               {preset === 'none' ? 'なし' : preset === 'soft' ? 'ソフト' : preset === 'hard' ? 'ハード' : '長い'}
