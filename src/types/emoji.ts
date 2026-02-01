@@ -51,15 +51,15 @@ export type AnimationEffectId = typeof ANIMATION_EFFECTS[number]['id']
 
 // アニメーション設定
 export interface AnimationState {
-  effects: AnimationEffectId[]  // 複数同時適用可能
-  speed: number                 // 速度 (0.5 - 2.0)
-  enabled: boolean              // アニメーション有効/無効
+  effects: AnimationEffectId[]                  // 選択された効果ID（複数同時適用可能）
+  effectSpeeds: Record<string, number>          // 効果ごとの速度 { pulse: 1.0, rainbow: 2.0 }
+  enabled: boolean                              // アニメーション有効/無効
 }
 
 // デフォルトアニメーション設定
 export const DEFAULT_ANIMATION_STATE: AnimationState = {
   effects: [],
-  speed: 1,
+  effectSpeeds: {},
   enabled: false,
 }
 

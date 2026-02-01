@@ -3,14 +3,17 @@ import { ANIMATION_EFFECTS, AnimationEffectId, AnimationState } from '../types/e
 interface AnimationSelectorProps {
   animation: AnimationState
   onToggleEffect: (effectId: AnimationEffectId) => void
-  onSpeedChange: (speed: number) => void
+  onEffectSpeedChange: (effectId: AnimationEffectId, speed: number) => void
   onClear: () => void
 }
+
+// 選択可能な速度（シームレスなループのため整数のみ）
+const SPEED_OPTIONS = [1, 2, 3, 4] as const
 
 export function AnimationSelector({
   animation,
   onToggleEffect,
-  onSpeedChange,
+  onEffectSpeedChange,
   onClear,
 }: AnimationSelectorProps) {
   const hasEffects = animation.effects.length > 0
@@ -38,43 +41,54 @@ export function AnimationSelector({
         })}
       </div>
 
-      {/* 選択中の効果 */}
+      {/* 選択中の効果と速度設定 */}
       {hasEffects && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-gray-600">選択中:</span>
+          <span className="text-sm text-gray-600">選択中の効果</span>
+
+          {/* 効果ごとの速度設定 */}
+          <div className="space-y-2">
             {animation.effects.map((effectId) => {
               const effect = ANIMATION_EFFECTS.find(e => e.id === effectId)
+              const speed = animation.effectSpeeds[effectId] ?? 1
+
               return (
-                <span
+                <div
                   key={effectId}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                  className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg"
                 >
-                  {effect?.name}
+                  {/* 効果名 */}
+                  <span className="text-sm font-medium text-blue-800 w-20 truncate">
+                    {effect?.name}
+                  </span>
+
+                  {/* 速度選択ボタン */}
+                  <div className="flex gap-1 flex-1">
+                    {SPEED_OPTIONS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => onEffectSpeedChange(effectId, s)}
+                        className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                          speed === s
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {s}x
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 削除ボタン */}
                   <button
                     onClick={() => onToggleEffect(effectId)}
-                    className="hover:text-blue-600"
+                    className="text-blue-400 hover:text-blue-600 text-sm"
                   >
                     ×
                   </button>
-                </span>
+                </div>
               )
             })}
-          </div>
-
-          {/* 速度スライダー */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">速度</span>
-            <input
-              type="range"
-              min={0.5}
-              max={2}
-              step={0.1}
-              value={animation.speed}
-              onChange={(e) => onSpeedChange(Number(e.target.value))}
-              className="flex-1"
-            />
-            <span className="w-12 text-right text-gray-700">{animation.speed}x</span>
           </div>
 
           {/* クリアボタン */}

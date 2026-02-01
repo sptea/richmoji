@@ -1,7 +1,7 @@
 import { GIFEncoder, quantize, applyPalette } from 'gifenc'
 import { EmojiState } from '../types/emoji'
 import { drawEmoji } from './canvas'
-import { calculateFrameTransform, calculateTotalFrames } from './animation'
+import { calculateFrameTransform, TOTAL_FRAMES, FRAME_DELAY } from './animation'
 
 const CANVAS_SIZE = 128
 
@@ -11,8 +11,8 @@ export async function downloadAsGif(
   bgImageElement: HTMLImageElement | undefined,
   filename: string
 ): Promise<void> {
-  const totalFrames = calculateTotalFrames(state.animation.speed)
-  const delay = 100 // 10fps = 100ms per frame
+  const totalFrames = TOTAL_FRAMES
+  const delay = FRAME_DELAY
 
   // GIFエンコーダーを初期化
   const gif = GIFEncoder()

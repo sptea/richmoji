@@ -43,7 +43,7 @@ export interface BackgroundImageActions {
 // アニメーション操作（アクション）
 export interface AnimationActions {
   onToggleEffect: (effectId: AnimationEffectId) => void
-  onSpeedChange: (speed: number) => void
+  onEffectSpeedChange: (effectId: AnimationEffectId, speed: number) => void
   onClear: () => void
 }
 

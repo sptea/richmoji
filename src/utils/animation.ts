@@ -219,14 +219,18 @@ export function calculateFrameTransform(
     return { ...DEFAULT_TRANSFORM }
   }
 
-  const progress = frameIndex / totalFrames
+  const baseProgress = frameIndex / totalFrames
   const transform = { ...DEFAULT_TRANSFORM }
 
   // 各効果を適用
   for (const effectId of animation.effects) {
     const calculator = effectCalculators[effectId]
     if (calculator) {
-      const partial = calculator(progress, textLength)
+      // 効果ごとの速度を取得（デフォルト1.0）
+      const speed = animation.effectSpeeds[effectId] ?? 1.0
+      // 速度でスケーリングしたprogress（0-1の範囲でループ）
+      const effectProgress = (baseProgress * speed) % 1
+      const partial = calculator(effectProgress, textLength)
 
       // 変換を合成
       if (partial.offsetX !== undefined) transform.offsetX += partial.offsetX
@@ -244,11 +248,13 @@ export function calculateFrameTransform(
   return transform
 }
 
-// GIFのフレーム数を計算（10fps固定、速度によってフレーム数を調整）
-export function calculateTotalFrames(speed: number): number {
-  // 速度1.0で20フレーム（2秒）、速度が速いほどフレーム数は少なく
-  const baseFrames = 20
-  return Math.round(baseFrames / speed)
+// GIFのフレーム数（10fps固定、2秒ループ = 20フレーム）
+// 速度は各効果ごとにprogressをスケーリングして適用するため、フレーム数は固定
+export const TOTAL_FRAMES = 20
+export const FRAME_DELAY = 100 // 10fps = 100ms per frame
+
+export function calculateTotalFrames(): number {
+  return TOTAL_FRAMES
 }
 
 // レインボー用: 色相から純粋な虹色を生成（元の色を無視）

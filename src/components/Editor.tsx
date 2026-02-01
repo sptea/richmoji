@@ -204,7 +204,7 @@ export function Editor({
         <AnimationSelector
           animation={animation}
           onToggleEffect={animationActions.onToggleEffect}
-          onSpeedChange={animationActions.onSpeedChange}
+          onEffectSpeedChange={animationActions.onEffectSpeedChange}
           onClear={animationActions.onClear}
         />
       </Section>

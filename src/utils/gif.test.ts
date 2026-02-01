@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { GIFEncoder, quantize, applyPalette } from 'gifenc'
-import { DEFAULT_EMOJI_STATE } from '../types/emoji'
-import { calculateFrameTransform, calculateTotalFrames } from './animation'
+import { AnimationState } from '../types/emoji'
+import { calculateFrameTransform, TOTAL_FRAMES } from './animation'
 
 describe('GIF生成', () => {
   describe('gifenc基本動作', () => {
@@ -183,17 +183,9 @@ describe('GIF生成', () => {
     })
   })
 
-  describe('calculateTotalFrames', () => {
-    it('速度1.0で20フレーム', () => {
-      expect(calculateTotalFrames(1.0)).toBe(20)
-    })
-
-    it('速度2.0で10フレーム', () => {
-      expect(calculateTotalFrames(2.0)).toBe(10)
-    })
-
-    it('速度0.5で40フレーム', () => {
-      expect(calculateTotalFrames(0.5)).toBe(40)
+  describe('TOTAL_FRAMES', () => {
+    it('20フレーム固定', () => {
+      expect(TOTAL_FRAMES).toBe(20)
     })
   })
 
@@ -202,9 +194,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: true,
         effects: ['pulse'] as const,
-        speed: 1.0,
+        effectSpeeds: { pulse: 1 },
       }
-      const totalFrames = calculateTotalFrames(animation.speed)
+      const totalFrames = TOTAL_FRAMES
       const textLength = 4
 
       const scales: number[] = []
@@ -227,9 +219,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: true,
         effects: ['blink'] as const,
-        speed: 1.0,
+        effectSpeeds: { blink: 1 },
       }
-      const totalFrames = calculateTotalFrames(animation.speed)
+      const totalFrames = TOTAL_FRAMES
       const textLength = 4
 
       const opacities: number[] = []
@@ -252,9 +244,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: false,
         effects: ['pulse'] as const,
-        speed: 1.0,
+        effectSpeeds: { pulse: 1 },
       }
-      const totalFrames = 20
+      const totalFrames = TOTAL_FRAMES
       const textLength = 4
 
       const transforms = []
@@ -280,9 +272,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: true,
         effects: [] as const,
-        speed: 1.0,
+        effectSpeeds: {},
       }
-      const totalFrames = 20
+      const totalFrames = TOTAL_FRAMES
       const textLength = 4
 
       const transforms = []
@@ -306,9 +298,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: true,
         effects: ['typing'] as const,
-        speed: 1.0,
+        effectSpeeds: { typing: 1 },
       }
-      const totalFrames = calculateTotalFrames(animation.speed)
+      const totalFrames = TOTAL_FRAMES
       const textLength = 4 // 4文字のテキスト
 
       const visibleCharsList: (number | null)[] = []
@@ -340,9 +332,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: true,
         effects: ['typing'] as const,
-        speed: 1.0,
+        effectSpeeds: { typing: 1 },
       }
-      const totalFrames = calculateTotalFrames(animation.speed)
+      const totalFrames = TOTAL_FRAMES
       const textLength = 0 // 空テキスト
 
       for (let i = 0; i < totalFrames; i++) {
@@ -361,9 +353,9 @@ describe('GIF生成', () => {
       const animation = {
         enabled: true,
         effects: ['rotate'] as const,
-        speed: 1.0,
+        effectSpeeds: { rotate: 1 },
       }
-      const totalFrames = calculateTotalFrames(animation.speed)
+      const totalFrames = TOTAL_FRAMES
       const textLength = 4
 
       const rotations: number[] = []
@@ -383,6 +375,22 @@ describe('GIF生成', () => {
       // 最初は0、最後は2π近く
       expect(rotations[0]).toBeCloseTo(0, 5)
       expect(rotations[totalFrames - 1]).toBeCloseTo(Math.PI * 2 * (totalFrames - 1) / totalFrames, 2)
+    })
+
+    it('効果ごとに異なる速度で動作する', () => {
+      const animation: AnimationState = {
+        enabled: true,
+        effects: ['pulse', 'rainbow'],
+        effectSpeeds: { pulse: 1, rainbow: 2 }, // rainbowは2倍速
+      }
+      const totalFrames = TOTAL_FRAMES
+      const textLength = 4
+
+      // frame 5 (progress = 0.25)
+      // pulse: progress 0.25 → scale変化
+      // rainbow: progress (0.25 * 2) % 1 = 0.5 → hueShift 180
+      const transform = calculateFrameTransform(animation, 5, totalFrames, textLength)
+      expect(transform.hueShift).toBe(180)
     })
   })
 })

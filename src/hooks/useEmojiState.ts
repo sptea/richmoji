@@ -164,24 +164,43 @@ export function useEmojiState() {
   // アニメーション関連のセッター
   const toggleAnimationEffect = useCallback((effectId: AnimationEffectId) => {
     setState(prev => {
-      const effects = prev.animation.effects.includes(effectId)
+      const isRemoving = prev.animation.effects.includes(effectId)
+      const effects = isRemoving
         ? prev.animation.effects.filter(id => id !== effectId)
         : [...prev.animation.effects, effectId]
+
+      // 効果速度を更新
+      const effectSpeeds = { ...prev.animation.effectSpeeds }
+      if (isRemoving) {
+        // 削除時は速度も削除
+        delete effectSpeeds[effectId]
+      } else {
+        // 追加時はデフォルト速度1.0を設定
+        effectSpeeds[effectId] = 1.0
+      }
+
       return {
         ...prev,
         animation: {
           ...prev.animation,
           effects,
+          effectSpeeds,
           enabled: effects.length > 0,
         },
       }
     })
   }, [])
 
-  const setAnimationSpeed = useCallback((speed: number) => {
+  const setEffectSpeed = useCallback((effectId: AnimationEffectId, speed: number) => {
     setState(prev => ({
       ...prev,
-      animation: { ...prev.animation, speed },
+      animation: {
+        ...prev.animation,
+        effectSpeeds: {
+          ...prev.animation.effectSpeeds,
+          [effectId]: speed,
+        },
+      },
     }))
   }, [])
 
@@ -233,9 +252,9 @@ export function useEmojiState() {
 
   const animationActions: AnimationActions = useMemo(() => ({
     onToggleEffect: toggleAnimationEffect,
-    onSpeedChange: setAnimationSpeed,
+    onEffectSpeedChange: setEffectSpeed,
     onClear: clearAnimation,
-  }), [toggleAnimationEffect, setAnimationSpeed, clearAnimation])
+  }), [toggleAnimationEffect, setEffectSpeed, clearAnimation])
 
   return {
     state,

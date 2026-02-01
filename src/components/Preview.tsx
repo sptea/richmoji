@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { EmojiState, COLOR_THEMES, ColorThemeId } from '../types/emoji'
 import { drawEmoji, loadImage } from '../utils/canvas'
-import { calculateFrameTransform, calculateTotalFrames } from '../utils/animation'
+import { calculateFrameTransform, TOTAL_FRAMES, FRAME_DELAY } from '../utils/animation'
 
 // 明るい色かどうかを判定（チェックマークの色を決めるため）
 function isLightColor(color: string): boolean {
@@ -98,13 +98,12 @@ export function Preview({
       startTimeRef.current = timestamp
     }
 
-    const totalFrames = calculateTotalFrames(state.animation.speed)
-    const duration = totalFrames * 100 // 10fps = 100ms per frame
+    const duration = TOTAL_FRAMES * FRAME_DELAY // 20 * 100 = 2000ms
     const elapsed = timestamp - startTimeRef.current
     const progress = (elapsed % duration) / duration
-    const frameIndex = Math.floor(progress * totalFrames)
+    const frameIndex = Math.floor(progress * TOTAL_FRAMES)
 
-    const transform = calculateFrameTransform(state.animation, frameIndex, totalFrames, textLength)
+    const transform = calculateFrameTransform(state.animation, frameIndex, TOTAL_FRAMES, textLength)
     drawAllCanvases(transform)
 
     animationFrameRef.current = requestAnimationFrame(animate)

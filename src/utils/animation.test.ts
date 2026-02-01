@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { calculateFrameTransform, calculateTotalFrames, applyHueShift, DEFAULT_TRANSFORM } from './animation'
+import { calculateFrameTransform, calculateTotalFrames, applyHueShift, DEFAULT_TRANSFORM, TOTAL_FRAMES } from './animation'
 import { AnimationState } from '../types/emoji'
 
 describe('animation.ts', () => {
   describe('calculateFrameTransform', () => {
-    const createAnimationState = (effects: string[], enabled = true): AnimationState => ({
+    const createAnimationState = (effects: string[], enabled = true, effectSpeeds: Record<string, number> = {}): AnimationState => ({
       effects: effects as AnimationState['effects'],
-      speed: 1,
+      effectSpeeds,
       enabled,
     })
 
@@ -168,20 +168,34 @@ describe('animation.ts', () => {
   })
 
   describe('calculateTotalFrames', () => {
-    it('速度1.0で20フレーム', () => {
-      expect(calculateTotalFrames(1.0)).toBe(20)
+    it('常に20フレームを返す', () => {
+      expect(calculateTotalFrames()).toBe(TOTAL_FRAMES)
+      expect(TOTAL_FRAMES).toBe(20)
+    })
+  })
+
+  describe('effectSpeeds', () => {
+    const createAnimationState = (effects: string[], enabled = true, effectSpeeds: Record<string, number> = {}): AnimationState => ({
+      effects: effects as AnimationState['effects'],
+      effectSpeeds,
+      enabled,
     })
 
-    it('速度2.0で10フレーム', () => {
-      expect(calculateTotalFrames(2.0)).toBe(10)
+    it('効果ごとに異なる速度を適用できる', () => {
+      // rainbowは2倍速（2周期）
+      const animation = createAnimationState(['rainbow'], true, { rainbow: 2 })
+
+      // progress 0.25 * speed 2 = 0.5 → hueShift 180
+      const result = calculateFrameTransform(animation, 5, 20, 5)
+      expect(result.hueShift).toBe(180)
     })
 
-    it('速度0.5で40フレーム', () => {
-      expect(calculateTotalFrames(0.5)).toBe(40)
-    })
+    it('速度未設定の効果はデフォルト1.0で動作', () => {
+      const animation = createAnimationState(['rainbow'], true, {}) // effectSpeedsは空
 
-    it('速度1.5で13フレーム（四捨五入）', () => {
-      expect(calculateTotalFrames(1.5)).toBe(13)
+      // progress 0.5 → hueShift 180
+      const result = calculateFrameTransform(animation, 10, 20, 5)
+      expect(result.hueShift).toBe(180)
     })
   })
 

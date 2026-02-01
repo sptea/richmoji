@@ -224,6 +224,7 @@ describe('useEmojiState', () => {
       })
 
       expect(result.current.state.animation.effects).toContain('blink')
+      expect(result.current.state.animation.effectSpeeds['blink']).toBe(1.0)
       expect(result.current.state.animation.enabled).toBe(true)
     })
 
@@ -241,17 +242,24 @@ describe('useEmojiState', () => {
       })
 
       expect(result.current.state.animation.effects).not.toContain('blink')
+      expect(result.current.state.animation.effectSpeeds['blink']).toBeUndefined()
       expect(result.current.state.animation.enabled).toBe(false)
     })
 
-    it('onSpeedChange: 速度が更新される', () => {
+    it('onEffectSpeedChange: 効果ごとの速度が更新される', () => {
       const { result } = renderHook(() => useEmojiState())
 
+      // まず効果を追加
       act(() => {
-        result.current.animationActions.onSpeedChange(1.5)
+        result.current.animationActions.onToggleEffect('blink')
       })
 
-      expect(result.current.state.animation.speed).toBe(1.5)
+      // 速度を変更
+      act(() => {
+        result.current.animationActions.onEffectSpeedChange('blink', 2)
+      })
+
+      expect(result.current.state.animation.effectSpeeds['blink']).toBe(2)
     })
 
     it('onClear: アニメーションがクリアされる', () => {
@@ -260,7 +268,7 @@ describe('useEmojiState', () => {
       // まず効果を追加
       act(() => {
         result.current.animationActions.onToggleEffect('blink')
-        result.current.animationActions.onSpeedChange(2)
+        result.current.animationActions.onEffectSpeedChange('blink', 2)
       })
 
       // クリア
@@ -270,7 +278,7 @@ describe('useEmojiState', () => {
 
       expect(result.current.state.animation.effects).toHaveLength(0)
       expect(result.current.state.animation.enabled).toBe(false)
-      expect(result.current.state.animation.speed).toBe(1)
+      expect(result.current.state.animation.effectSpeeds).toEqual({})
     })
   })
 
