@@ -81,15 +81,33 @@ function calculateShake(progress: number): Partial<AnimationTransform> {
 }
 
 function calculateScrollH(progress: number): Partial<AnimationTransform> {
-  // 左から右へスクロール（ループ）
-  const offset = (progress * 2 - 1) * CANVAS_SIZE
-  return { offsetX: offset > CANVAS_SIZE / 2 ? offset - CANVAS_SIZE * 2 : offset }
+  // 左から右へスクロール（滑らかなループ）
+  // 0 → 0.5: 中央から右へ移動して画面外へ
+  // 0.5 → 1: 左の画面外から中央へ戻る
+  const cycle = progress * 2
+  let offsetX: number
+  if (cycle < 1) {
+    // 中央(0) → 右端(128)
+    offsetX = cycle * CANVAS_SIZE
+  } else {
+    // 左端(-128) → 中央(0)
+    offsetX = (cycle - 2) * CANVAS_SIZE
+  }
+  return { offsetX }
 }
 
 function calculateScrollV(progress: number): Partial<AnimationTransform> {
-  // 上から下へスクロール（ループ）
-  const offset = (progress * 2 - 1) * CANVAS_SIZE
-  return { offsetY: offset > CANVAS_SIZE / 2 ? offset - CANVAS_SIZE * 2 : offset }
+  // 上から下へスクロール（滑らかなループ）
+  const cycle = progress * 2
+  let offsetY: number
+  if (cycle < 1) {
+    // 中央(0) → 下端(128)
+    offsetY = cycle * CANVAS_SIZE
+  } else {
+    // 上端(-128) → 中央(0)
+    offsetY = (cycle - 2) * CANVAS_SIZE
+  }
+  return { offsetY }
 }
 
 function calculateRainbow(progress: number): Partial<AnimationTransform> {
@@ -116,7 +134,13 @@ function calculateZoom(progress: number): Partial<AnimationTransform> {
 
 function calculateTyping(progress: number, textLength: number): Partial<AnimationTransform> {
   // 一文字ずつ表示
-  const visibleChars = Math.floor(progress * (textLength + 1))
+  // 最後の30%は全文字表示を保証（ループ前に全文字が見える時間を確保）
+  if (progress >= 0.7) {
+    return { visibleChars: textLength }
+  }
+  // 最初の70%で0からtextLengthまで表示
+  // +1して範囲を広げ、floorで切り捨て
+  const visibleChars = Math.min(textLength, Math.floor((progress / 0.7) * (textLength + 1)))
   return { visibleChars }
 }
 
@@ -227,47 +251,14 @@ export function calculateTotalFrames(speed: number): number {
   return Math.round(baseFrames / speed)
 }
 
-// 色相シフトを適用したカラーを計算
-export function applyHueShift(color: string, hueShift: number): string {
-  if (hueShift === 0) return color
+// レインボー用: 色相から純粋な虹色を生成（元の色を無視）
+export function applyHueShift(_color: string, hueShift: number): string {
+  if (hueShift === 0) return _color
 
-  // HEXをRGBに変換
-  let r = 0, g = 0, b = 0
-  if (color.startsWith('#')) {
-    const hex = color.slice(1)
-    if (hex.length === 3) {
-      r = parseInt(hex[0] + hex[0], 16)
-      g = parseInt(hex[1] + hex[1], 16)
-      b = parseInt(hex[2] + hex[2], 16)
-    } else if (hex.length === 6) {
-      r = parseInt(hex.slice(0, 2), 16)
-      g = parseInt(hex.slice(2, 4), 16)
-      b = parseInt(hex.slice(4, 6), 16)
-    }
-  }
-
-  // RGBをHSLに変換
-  r /= 255
-  g /= 255
-  b /= 255
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  let h = 0
-  let s = 0
-  const l = (max + min) / 2
-
-  if (max !== min) {
-    const d = max - min
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break
-      case g: h = ((b - r) / d + 2) / 6; break
-      case b: h = ((r - g) / d + 4) / 6; break
-    }
-  }
-
-  // 色相をシフト
-  h = (h + hueShift / 360) % 1
+  // 色相から直接RGBを生成（彩度100%、明度50%の鮮やかな色）
+  const h = (hueShift / 360) % 1
+  const s = 1.0 // 彩度最大
+  const l = 0.5 // 明度50%（最も鮮やか）
 
   // HSLをRGBに変換
   const hue2rgb = (p: number, q: number, t: number) => {
@@ -279,15 +270,11 @@ export function applyHueShift(color: string, hueShift: number): string {
     return p
   }
 
-  if (s === 0) {
-    r = g = b = l
-  } else {
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-    const p = 2 * l - q
-    r = hue2rgb(p, q, h + 1 / 3)
-    g = hue2rgb(p, q, h)
-    b = hue2rgb(p, q, h - 1 / 3)
-  }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+  const p = 2 * l - q
+  const r = hue2rgb(p, q, h + 1 / 3)
+  const g = hue2rgb(p, q, h)
+  const b = hue2rgb(p, q, h - 1 / 3)
 
   // RGBをHEXに変換
   const toHex = (n: number) => {

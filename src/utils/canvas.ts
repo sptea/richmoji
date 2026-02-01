@@ -82,10 +82,26 @@ export function drawEmoji(
 
   if (!text) return
 
-  // タイピング効果: 表示する文字数を制限
-  const displayText = transform.visibleChars !== null
-    ? text.slice(0, transform.visibleChars)
-    : text
+  // タイピング効果: 表示する文字数を制限（改行を除いた文字数でカウント）
+  let displayText = text
+  if (transform.visibleChars !== null) {
+    if (transform.visibleChars === 0) {
+      displayText = ''
+    } else {
+      let visibleCount = 0
+      let sliceEnd = text.length // デフォルトは全文字
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] !== '\n') {
+          visibleCount++
+        }
+        if (visibleCount >= transform.visibleChars) {
+          sliceEnd = i + 1
+          break
+        }
+      }
+      displayText = text.slice(0, sliceEnd)
+    }
+  }
 
   if (!displayText) return
 

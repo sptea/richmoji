@@ -94,7 +94,7 @@ describe('animation.ts', () => {
     })
 
     describe('typing効果', () => {
-      it('visibleCharsが徐々に増加する', () => {
+      it('visibleCharsが徐々に増加し最後の30%は全文字表示', () => {
         const animation = createAnimationState(['typing'])
         const textLength = 5
 
@@ -102,9 +102,13 @@ describe('animation.ts', () => {
         const result0 = calculateFrameTransform(animation, 0, 20, textLength)
         expect(result0.visibleChars).toBe(0)
 
-        // progress 0.5 → 約半分の文字表示
+        // progress 0.5 → 70%で全文字なので、50%では大部分表示
         const result10 = calculateFrameTransform(animation, 10, 20, textLength)
-        expect(result10.visibleChars).toBe(3)
+        expect(result10.visibleChars).toBe(4) // floor((0.5/0.7)*6) = 4
+
+        // progress 0.7以上 → 全文字表示を保証
+        const result14 = calculateFrameTransform(animation, 14, 20, textLength)
+        expect(result14.visibleChars).toBe(5)
 
         // progress 1.0に近い → 全文字表示
         const result19 = calculateFrameTransform(animation, 19, 20, textLength)
@@ -181,59 +185,54 @@ describe('animation.ts', () => {
     })
   })
 
-  describe('applyHueShift', () => {
+  describe('applyHueShift（レインボー用）', () => {
     it('シフト0は元の色を返す', () => {
       const color = '#ff0000'
       expect(applyHueShift(color, 0)).toBe(color)
     })
 
-    it('赤(#ff0000)をシフト120で緑系になる', () => {
-      const result = applyHueShift('#ff0000', 120)
-      // 赤 → 緑系（#00ff00に近い）
+    it('hueShift 120で緑系になる（元の色は無視）', () => {
+      const result = applyHueShift('#000000', 120) // 黒でも関係ない
+      // hue 120 = 緑系（#00ff00）
       expect(result).toMatch(/^#[0-9a-f]{6}$/)
-      // 緑成分が高いことを確認
       const g = parseInt(result.slice(3, 5), 16)
       expect(g).toBeGreaterThan(200)
     })
 
-    it('赤(#ff0000)をシフト240で青系になる', () => {
-      const result = applyHueShift('#ff0000', 240)
-      // 赤 → 青系（#0000ffに近い）
+    it('hueShift 240で青系になる（元の色は無視）', () => {
+      const result = applyHueShift('#ffffff', 240) // 白でも関係ない
+      // hue 240 = 青系（#0000ff）
       expect(result).toMatch(/^#[0-9a-f]{6}$/)
-      // 青成分が高いことを確認
       const b = parseInt(result.slice(5, 7), 16)
       expect(b).toBeGreaterThan(200)
     })
 
-    it('シフト360は元の色に戻る（完全な一周）', () => {
-      const color = '#ff6600'
-      const result = applyHueShift(color, 360)
-      // 完全に同じではないかもしれないが、非常に近い値になるはず
+    it('hueShift 360で赤系になる（一周）', () => {
+      const result = applyHueShift('#808080', 360)
+      // hue 360 = hue 0 = 赤系（#ff0000）
       expect(result).toMatch(/^#[0-9a-f]{6}$/)
+      const r = parseInt(result.slice(1, 3), 16)
+      expect(r).toBeGreaterThan(200)
     })
 
-    it('3桁のHEXカラーも処理できる', () => {
-      const result = applyHueShift('#f00', 120)
+    it('hueShift 180でシアン系になる', () => {
+      const result = applyHueShift('#123456', 180)
+      // hue 180 = シアン系（#00ffff）
       expect(result).toMatch(/^#[0-9a-f]{6}$/)
+      const g = parseInt(result.slice(3, 5), 16)
+      const b = parseInt(result.slice(5, 7), 16)
+      expect(g).toBeGreaterThan(200)
+      expect(b).toBeGreaterThan(200)
     })
 
-    it('グレースケール（彩度0）はシフトしても変わらない', () => {
-      const gray = '#808080'
-      const result = applyHueShift(gray, 180)
-      // グレーはHSLで彩度0なので、色相シフトしても同じ
-      expect(result).toBe(gray)
-    })
-
-    it('白はシフトしても変わらない', () => {
-      const white = '#ffffff'
-      const result = applyHueShift(white, 180)
-      expect(result).toBe(white)
-    })
-
-    it('黒はシフトしても変わらない', () => {
-      const black = '#000000'
-      const result = applyHueShift(black, 180)
-      expect(result).toBe(black)
+    it('どんな色でもレインボーが機能する', () => {
+      // 黒、白、グレーでも鮮やかなレインボーカラーになる
+      const colors = ['#000000', '#ffffff', '#808080', '#ff0000']
+      for (const color of colors) {
+        const result = applyHueShift(color, 90) // 黄緑系
+        expect(result).toMatch(/^#[0-9a-f]{6}$/)
+        expect(result).not.toBe(color) // 元の色とは異なる
+      }
     })
   })
 })

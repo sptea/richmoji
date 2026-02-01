@@ -6,8 +6,8 @@ import { FONTS, SHADOW_PRESETS, DEFAULT_EMOJI_STATE, STYLE_PRESETS } from '../ty
 
 describe('emoji.ts 型定義', () => {
   describe('FONTS', () => {
-    it('5種類のフォントが定義されている', () => {
-      expect(FONTS).toHaveLength(5)
+    it('10種類のフォントが定義されている', () => {
+      expect(FONTS).toHaveLength(10)
     })
 
     it('各フォントに必須プロパティがある', () => {
@@ -19,9 +19,22 @@ describe('emoji.ts 型定義', () => {
       })
     })
 
-    it('Reggae OneはnoBoldフラグを持つ', () => {
-      const reggae = FONTS.find(f => f.id === 'reggae-one')
-      expect(reggae?.noBold).toBe(true)
+    it('単一ウェイトのフォントはnoBoldフラグを持つ', () => {
+      // 単一ウェイトのフォント（太字なし）
+      const noBoldFonts = ['reggae-one', 'dela-gothic-one', 'yusei-magic', 'hachi-maru-pop', 'mochiy-pop-one', 'dot-gothic-16']
+      noBoldFonts.forEach(id => {
+        const font = FONTS.find(f => f.id === id)
+        expect(font?.noBold).toBe(true)
+      })
+    })
+
+    it('太字対応フォントはnoBoldがfalse', () => {
+      // 太字対応フォント
+      const boldFonts = ['noto-sans-jp', 'm-plus-rounded', 'noto-serif-jp', 'kiwi-maru']
+      boldFonts.forEach(id => {
+        const font = FONTS.find(f => f.id === id)
+        expect(font?.noBold).toBe(false)
+      })
     })
   })
 
@@ -52,8 +65,8 @@ describe('emoji.ts 型定義', () => {
   })
 
   describe('STYLE_PRESETS', () => {
-    it('8種類のスタイルプリセットが定義されている', () => {
-      expect(STYLE_PRESETS).toHaveLength(8)
+    it('22種類のスタイルプリセットが定義されている', () => {
+      expect(STYLE_PRESETS).toHaveLength(22)
     })
 
     it('各プリセットに必須プロパティがある', () => {
