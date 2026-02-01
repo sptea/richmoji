@@ -1,7 +1,8 @@
-import { FONTS, STYLE_PRESETS } from '../types/emoji'
+import { FONTS, STYLE_PRESETS, StylePreset } from '../types/emoji'
 import { EditorProps } from '../types/editor'
 import { ImageUpload } from './ImageUpload'
 import { AnimationSelector } from './AnimationSelector'
+import { usePresetHistory } from '../hooks/usePresetHistory'
 
 export function Editor({
   font,
@@ -17,40 +18,55 @@ export function Editor({
   onApplyPreset,
 }: EditorProps) {
   const currentFont = FONTS.find(f => f.id === font.id)
+  const { history, addToHistory } = usePresetHistory()
+
+  // 履歴に基づいてプリセットを取得
+  const recentPresets = history
+    .map(id => STYLE_PRESETS.find(p => p.id === id))
+    .filter((p): p is StylePreset => p !== undefined)
+
+  // プリセット適用時に履歴に追加
+  const handleApplyPreset = (preset: StylePreset) => {
+    addToHistory(preset.id)
+    onApplyPreset(preset)
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6 space-y-6">
       {/* スタイルプリセット */}
       <Section title="スタイルプリセット">
-        <div className="grid grid-cols-4 gap-2">
-          {STYLE_PRESETS.map((preset) => {
-            const presetFont = FONTS.find(f => f.id === preset.state.font?.id)
-            const fontFamily = presetFont?.family || 'sans-serif'
-            const isBold = preset.state.font?.bold ?? false
-            const textColor = preset.state.textColor || '#000000'
-            const bgColor = preset.state.backgroundColor || 'transparent'
-            const hasStroke = preset.state.stroke?.enabled
-            const strokeColor = preset.state.stroke?.color || '#000000'
+        <div className="space-y-3">
+          {/* 最近使った */}
+          {recentPresets.length > 0 && (
+            <div>
+              <div className="text-xs text-gray-400 mb-1.5">最近使った</div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {recentPresets.map((preset) => (
+                  <PresetButton
+                    key={`recent-${preset.id}`}
+                    preset={preset}
+                    onClick={() => handleApplyPreset(preset)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-            return (
-              <button
-                key={preset.id}
-                onClick={() => onApplyPreset(preset)}
-                className="px-3 py-3 text-sm rounded-lg border border-gray-200 hover:border-blue-500 hover:scale-105 transition-all overflow-hidden"
-                style={{
-                  fontFamily: `"${fontFamily}", sans-serif`,
-                  fontWeight: isBold ? 'bold' : 'normal',
-                  color: textColor,
-                  backgroundColor: bgColor === 'transparent' ? '#f9fafb' : bgColor,
-                  textShadow: hasStroke
-                    ? `1px 1px 0 ${strokeColor}, -1px -1px 0 ${strokeColor}, 1px -1px 0 ${strokeColor}, -1px 1px 0 ${strokeColor}`
-                    : undefined,
-                }}
-              >
-                {preset.name}
-              </button>
-            )
-          })}
+          {/* すべて */}
+          <div>
+            {recentPresets.length > 0 && (
+              <div className="text-xs text-gray-400 mb-1.5">すべて</div>
+            )}
+            <div className="grid grid-cols-4 gap-2">
+              {STYLE_PRESETS.map((preset) => (
+                <PresetButton
+                  key={preset.id}
+                  preset={preset}
+                  onClick={() => handleApplyPreset(preset)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </Section>
 
@@ -212,5 +228,33 @@ function GroupHeader({ title }: { title: string }) {
       <span className="text-xs text-gray-400 font-medium">{title}</span>
       <div className="h-px flex-1 bg-gray-200" />
     </div>
+  )
+}
+
+function PresetButton({ preset, onClick }: { preset: StylePreset; onClick: () => void }) {
+  const presetFont = FONTS.find(f => f.id === preset.state.font?.id)
+  const fontFamily = presetFont?.family || 'sans-serif'
+  const isBold = preset.state.font?.bold ?? false
+  const textColor = preset.state.textColor || '#000000'
+  const bgColor = preset.state.backgroundColor || 'transparent'
+  const hasStroke = preset.state.stroke?.enabled
+  const strokeColor = preset.state.stroke?.color || '#000000'
+
+  return (
+    <button
+      onClick={onClick}
+      className="px-3 py-3 text-sm rounded-lg border border-gray-200 hover:border-blue-500 hover:scale-105 transition-all overflow-hidden"
+      style={{
+        fontFamily: `"${fontFamily}", sans-serif`,
+        fontWeight: isBold ? 'bold' : 'normal',
+        color: textColor,
+        backgroundColor: bgColor === 'transparent' ? '#f9fafb' : bgColor,
+        textShadow: hasStroke
+          ? `1px 1px 0 ${strokeColor}, -1px -1px 0 ${strokeColor}, 1px -1px 0 ${strokeColor}, -1px 1px 0 ${strokeColor}`
+          : undefined,
+      }}
+    >
+      {preset.name}
+    </button>
   )
 }

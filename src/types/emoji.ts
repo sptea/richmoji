@@ -1,10 +1,19 @@
 // フォント定義
 export const FONTS = [
+  // ゴシック系
   { id: 'noto-sans-jp', name: 'Noto Sans JP', family: 'Noto Sans JP', category: 'ゴシック', noBold: false },
   { id: 'm-plus-rounded', name: 'M PLUS Rounded 1c', family: 'M PLUS Rounded 1c', category: '丸ゴシック', noBold: false },
+  { id: 'dela-gothic-one', name: 'Dela Gothic One', family: 'Dela Gothic One', category: '極太ゴシック', noBold: true },
+  // 明朝・上品系
   { id: 'noto-serif-jp', name: 'Noto Serif JP', family: 'Noto Serif JP', category: '明朝', noBold: false },
+  // 手書き・カジュアル
   { id: 'kiwi-maru', name: 'Kiwi Maru', family: 'Kiwi Maru', category: '手書き風', noBold: false },
+  { id: 'yusei-magic', name: 'Yusei Magic', family: 'Yusei Magic', category: 'マジック', noBold: true },
+  { id: 'hachi-maru-pop', name: 'Hachi Maru Pop', family: 'Hachi Maru Pop', category: 'レトロかわいい', noBold: true },
+  // 個性・インパクト
   { id: 'reggae-one', name: 'Reggae One', family: 'Reggae One', category: 'インパクト', noBold: true },
+  { id: 'mochiy-pop-one', name: 'Mochiy Pop One', family: 'Mochiy Pop One', category: 'POP', noBold: true },
+  { id: 'dot-gothic-16', name: 'DotGothic16', family: 'DotGothic16', category: 'ドット', noBold: true },
 ] as const
 
 export type FontId = typeof FONTS[number]['id']
@@ -130,13 +139,110 @@ export const DEFAULT_EMOJI_STATE: EmojiState = {
   animation: DEFAULT_ANIMATION_STATE,
 }
 
-// プリセットカラー（16色）
-export const PRESET_COLORS = [
-  '#000000', '#ffffff', '#ff0000', '#00ff00',
-  '#0000ff', '#ffff00', '#ff00ff', '#00ffff',
-  '#ff6600', '#ff0066', '#6600ff', '#00ff66',
-  '#666666', '#999999', '#cccccc', '#333333',
+// カラーテーマID
+export type ColorThemeId =
+  | 'default'
+  | 'pastel'
+  | 'vivid'
+  | 'cool'
+  | 'warm'
+  | 'monochrome'
+  | 'retro'
+  | 'neon'
+
+// カラーテーマ
+export interface ColorTheme {
+  id: ColorThemeId
+  name: string
+  colors: readonly string[]
+}
+
+// カラーテーマ定義（8テーマ）
+export const COLOR_THEMES: readonly ColorTheme[] = [
+  {
+    id: 'default',
+    name: 'デフォルト',
+    colors: [
+      '#000000', '#ffffff', '#ff0000', '#00ff00',
+      '#0000ff', '#ffff00', '#ff00ff', '#00ffff',
+      '#ff6600', '#ff0066', '#6600ff', '#00ff66',
+      '#666666', '#999999', '#cccccc', '#333333',
+    ],
+  },
+  {
+    id: 'pastel',
+    name: 'パステル',
+    colors: [
+      '#ffd1dc', '#ffe4e1', '#e6e6fa', '#d8bfd8',
+      '#b0e0e6', '#afeeee', '#98fb98', '#f0fff0',
+      '#fffacd', '#ffefd5', '#ffe4b5', '#ffdab9',
+      '#ffffff', '#f5f5f5', '#dcdcdc', '#d3d3d3',
+    ],
+  },
+  {
+    id: 'vivid',
+    name: 'ビビッド',
+    colors: [
+      '#ff0000', '#ff4500', '#ff8c00', '#ffd700',
+      '#adff2f', '#00ff00', '#00fa9a', '#00ffff',
+      '#1e90ff', '#0000ff', '#8a2be2', '#ff00ff',
+      '#ff1493', '#000000', '#ffffff', '#808080',
+    ],
+  },
+  {
+    id: 'cool',
+    name: 'クール',
+    colors: [
+      '#001f3f', '#003366', '#0066cc', '#0099ff',
+      '#00ccff', '#66ffff', '#006666', '#009999',
+      '#00cc99', '#339966', '#336699', '#6666cc',
+      '#9966cc', '#663399', '#333333', '#ffffff',
+    ],
+  },
+  {
+    id: 'warm',
+    name: 'ウォーム',
+    colors: [
+      '#8b0000', '#b22222', '#cd5c5c', '#f08080',
+      '#ff4500', '#ff6347', '#ff7f50', '#ffa07a',
+      '#ff8c00', '#ffa500', '#ffd700', '#ffff00',
+      '#8b4513', '#a0522d', '#d2691e', '#f5deb3',
+    ],
+  },
+  {
+    id: 'monochrome',
+    name: 'モノクロ',
+    colors: [
+      '#000000', '#1a1a1a', '#333333', '#4d4d4d',
+      '#666666', '#808080', '#999999', '#b3b3b3',
+      '#cccccc', '#d9d9d9', '#e6e6e6', '#f2f2f2',
+      '#ffffff', '#fafafa', '#f5f5f5', '#ebebeb',
+    ],
+  },
+  {
+    id: 'retro',
+    name: 'レトロ',
+    colors: [
+      '#704214', '#8b7355', '#c4a661', '#d2b48c',
+      '#bc8f8f', '#cd853f', '#daa520', '#b8860b',
+      '#6b8e23', '#808000', '#556b2f', '#8fbc8f',
+      '#708090', '#778899', '#2f4f4f', '#f5f5dc',
+    ],
+  },
+  {
+    id: 'neon',
+    name: 'ネオン',
+    colors: [
+      '#ff00ff', '#ff1493', '#ff69b4', '#ff6ec7',
+      '#39ff14', '#00ff00', '#7fff00', '#ccff00',
+      '#00ffff', '#00bfff', '#1e90ff', '#6a5acd',
+      '#ffff00', '#ffd700', '#ff8c00', '#000000',
+    ],
+  },
 ] as const
+
+// デフォルトのプリセットカラー（後方互換性のため維持）
+export const PRESET_COLORS = COLOR_THEMES[0].colors
 
 // スタイルプリセット
 export interface StylePreset {
@@ -239,6 +345,177 @@ export const STYLE_PRESETS: StylePreset[] = [
       backgroundColor: '#000000',
       stroke: { enabled: false, color: '#ffffff', width: 2 },
       shadow: 'soft',
+      font: { id: 'noto-sans-jp', size: 48, bold: true, italic: false },
+    },
+  },
+  // 新フォント活用プリセット
+  {
+    id: 'retro-game',
+    name: 'レトロゲーム',
+    state: {
+      textColor: '#ffffff',
+      textOpacity: 1,
+      backgroundColor: '#000000',
+      stroke: { enabled: false, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'dot-gothic-16', size: 48, bold: false, italic: false },
+    },
+  },
+  {
+    id: 'magic-marker',
+    name: 'マジック',
+    state: {
+      textColor: '#000000',
+      textOpacity: 1,
+      backgroundColor: 'transparent',
+      stroke: { enabled: false, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'yusei-magic', size: 48, bold: false, italic: false },
+    },
+  },
+  {
+    id: 'shouting',
+    name: '叫び',
+    state: {
+      textColor: '#ff0000',
+      textOpacity: 1,
+      backgroundColor: 'transparent',
+      stroke: { enabled: true, color: '#ffffff', width: 3 },
+      shadow: 'hard',
+      font: { id: 'dela-gothic-one', size: 48, bold: false, italic: false },
+    },
+  },
+  {
+    id: 'kawaii',
+    name: 'かわいい',
+    state: {
+      textColor: '#ff69b4',
+      textOpacity: 1,
+      backgroundColor: 'transparent',
+      stroke: { enabled: true, color: '#ffffff', width: 2 },
+      shadow: 'soft',
+      font: { id: 'hachi-maru-pop', size: 44, bold: false, italic: false },
+    },
+  },
+  {
+    id: 'pop-cute',
+    name: 'ポップかわいい',
+    state: {
+      textColor: '#ff6600',
+      textOpacity: 1,
+      backgroundColor: 'transparent',
+      stroke: { enabled: true, color: '#ffffff', width: 2 },
+      shadow: 'soft',
+      font: { id: 'mochiy-pop-one', size: 44, bold: false, italic: false },
+    },
+  },
+  // 季節・イベント系
+  {
+    id: 'sakura',
+    name: '桜',
+    state: {
+      textColor: '#ff69b4',
+      textOpacity: 1,
+      backgroundColor: '#fff0f5',
+      stroke: { enabled: true, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'kiwi-maru', size: 44, bold: false, italic: false },
+    },
+  },
+  {
+    id: 'summer',
+    name: 'サマー',
+    state: {
+      textColor: '#0066cc',
+      textOpacity: 1,
+      backgroundColor: '#87ceeb',
+      stroke: { enabled: true, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'm-plus-rounded', size: 48, bold: true, italic: false },
+    },
+  },
+  {
+    id: 'halloween',
+    name: 'ハロウィン',
+    state: {
+      textColor: '#ff6600',
+      textOpacity: 1,
+      backgroundColor: '#000000',
+      stroke: { enabled: true, color: '#9932cc', width: 2 },
+      shadow: 'hard',
+      font: { id: 'reggae-one', size: 48, bold: false, italic: false },
+    },
+  },
+  {
+    id: 'christmas',
+    name: 'クリスマス',
+    state: {
+      textColor: '#ff0000',
+      textOpacity: 1,
+      backgroundColor: '#228b22',
+      stroke: { enabled: true, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'm-plus-rounded', size: 48, bold: true, italic: false },
+    },
+  },
+  {
+    id: 'new-year',
+    name: '正月',
+    state: {
+      textColor: '#ffd700',
+      textOpacity: 1,
+      backgroundColor: '#cc0000',
+      stroke: { enabled: true, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'noto-serif-jp', size: 44, bold: true, italic: false },
+    },
+  },
+  // 業務・ビジネス系
+  {
+    id: 'warning',
+    name: '警告',
+    state: {
+      textColor: '#000000',
+      textOpacity: 1,
+      backgroundColor: '#ffcc00',
+      stroke: { enabled: false, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'noto-sans-jp', size: 48, bold: true, italic: false },
+    },
+  },
+  {
+    id: 'success',
+    name: '成功',
+    state: {
+      textColor: '#ffffff',
+      textOpacity: 1,
+      backgroundColor: '#28a745',
+      stroke: { enabled: false, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'noto-sans-jp', size: 48, bold: true, italic: false },
+    },
+  },
+  {
+    id: 'error',
+    name: 'エラー',
+    state: {
+      textColor: '#ffffff',
+      textOpacity: 1,
+      backgroundColor: '#dc3545',
+      stroke: { enabled: false, color: '#ffffff', width: 2 },
+      shadow: 'none',
+      font: { id: 'noto-sans-jp', size: 48, bold: true, italic: false },
+    },
+  },
+  {
+    id: 'info',
+    name: '情報',
+    state: {
+      textColor: '#ffffff',
+      textOpacity: 1,
+      backgroundColor: '#17a2b8',
+      stroke: { enabled: false, color: '#ffffff', width: 2 },
+      shadow: 'none',
       font: { id: 'noto-sans-jp', size: 48, bold: true, italic: false },
     },
   },

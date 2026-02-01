@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { EmojiState, PRESET_COLORS } from '../types/emoji'
+import { EmojiState, COLOR_THEMES, ColorThemeId } from '../types/emoji'
 import { drawEmoji, loadImage } from '../utils/canvas'
 import { calculateFrameTransform, calculateTotalFrames } from '../utils/animation'
 
@@ -65,6 +65,10 @@ export function Preview({
   // ドラッグ状態
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null)
+
+  // カラーテーマ状態
+  const [colorTheme, setColorTheme] = useState<ColorThemeId>('default')
+  const currentTheme = COLOR_THEMES.find(t => t.id === colorTheme) || COLOR_THEMES[0]
 
   // 背景画像を読み込む
   useEffect(() => {
@@ -245,85 +249,101 @@ export function Preview({
 
   // 色タイル（インラインで使用）
   const colorTiles = (
-    <div className="grid grid-cols-2 gap-2 mb-3">
-      {/* 文字色 */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-500">文字</span>
-          <input
-            type="color"
-            value={textColor}
-            onChange={(e) => onTextColorChange(e.target.value)}
-            className="w-5 h-5 rounded cursor-pointer border border-gray-300"
-          />
-        </div>
-        <div className="flex flex-wrap gap-0.5">
-          {PRESET_COLORS.map((color) => (
-            <button
-              key={color}
-              onClick={() => onTextColorChange(color)}
-              className={`w-4 h-4 rounded border transition-transform hover:scale-110 flex items-center justify-center ${
-                textColor === color ? 'border-blue-500 ring-1 ring-blue-200' : 'border-gray-300'
-              }`}
-              style={{ backgroundColor: color }}
-            >
-              {textColor === color && (
-                <svg className="w-2 h-2" viewBox="0 0 20 20" fill="currentColor" style={{ color: isLightColor(color) ? '#000' : '#fff' }}>
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              )}
-            </button>
+    <div className="mb-3">
+      {/* テーマ選択 */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs text-gray-500">パレット</span>
+        <select
+          value={colorTheme}
+          onChange={(e) => setColorTheme(e.target.value as ColorThemeId)}
+          className="flex-1 text-xs border border-gray-300 rounded px-1.5 py-0.5 bg-white"
+        >
+          {COLOR_THEMES.map((theme) => (
+            <option key={theme.id} value={theme.id}>{theme.name}</option>
           ))}
-        </div>
+        </select>
       </div>
 
-      {/* 背景色 */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-500">背景</span>
-          <input
-            type="color"
-            value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
-            onChange={(e) => onBackgroundColorChange(e.target.value)}
-            className="w-5 h-5 rounded cursor-pointer border border-gray-300"
-          />
+      <div className="grid grid-cols-2 gap-2">
+        {/* 文字色 */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-500">文字</span>
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => onTextColorChange(e.target.value)}
+              className="w-5 h-5 rounded cursor-pointer border border-gray-300"
+            />
+          </div>
+          <div className="flex flex-wrap gap-0.5">
+            {currentTheme.colors.map((color, index) => (
+              <button
+                key={`${color}-${index}`}
+                onClick={() => onTextColorChange(color)}
+                className={`w-4 h-4 rounded border transition-transform hover:scale-110 flex items-center justify-center ${
+                  textColor === color ? 'border-blue-500 ring-1 ring-blue-200' : 'border-gray-300'
+                }`}
+                style={{ backgroundColor: color }}
+              >
+                {textColor === color && (
+                  <svg className="w-2 h-2" viewBox="0 0 20 20" fill="currentColor" style={{ color: isLightColor(color) ? '#000' : '#fff' }}>
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-0.5">
-          <button
-            onClick={() => onBackgroundColorChange('transparent')}
-            className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${
-              backgroundColor === 'transparent'
-                ? 'border-blue-500 ring-1 ring-blue-200'
-                : 'border-gray-300'
-            }`}
-            style={{
-              backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
-              backgroundSize: '4px 4px',
-              backgroundPosition: '0 0, 0 2px, 2px -2px, -2px 0px',
-            }}
-          >
-            {backgroundColor === 'transparent' && (
-              <svg className="w-2 h-2" viewBox="0 0 20 20" fill="#666">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            )}
-          </button>
-          {PRESET_COLORS.slice(0, 15).map((color) => (
+
+        {/* 背景色 */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-500">背景</span>
+            <input
+              type="color"
+              value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
+              onChange={(e) => onBackgroundColorChange(e.target.value)}
+              className="w-5 h-5 rounded cursor-pointer border border-gray-300"
+            />
+          </div>
+          <div className="flex flex-wrap gap-0.5">
             <button
-              key={color}
-              onClick={() => onBackgroundColorChange(color)}
-              className={`w-4 h-4 rounded border transition-transform hover:scale-110 flex items-center justify-center ${
-                backgroundColor === color ? 'border-blue-500 ring-1 ring-blue-200' : 'border-gray-300'
+              onClick={() => onBackgroundColorChange('transparent')}
+              className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${
+                backgroundColor === 'transparent'
+                  ? 'border-blue-500 ring-1 ring-blue-200'
+                  : 'border-gray-300'
               }`}
-              style={{ backgroundColor: color }}
+              style={{
+                backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
+                backgroundSize: '4px 4px',
+                backgroundPosition: '0 0, 0 2px, 2px -2px, -2px 0px',
+              }}
             >
-              {backgroundColor === color && (
-                <svg className="w-2 h-2" viewBox="0 0 20 20" fill="currentColor" style={{ color: isLightColor(color) ? '#000' : '#fff' }}>
+              {backgroundColor === 'transparent' && (
+                <svg className="w-2 h-2" viewBox="0 0 20 20" fill="#666">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
             </button>
-          ))}
+            {currentTheme.colors.slice(0, 15).map((color, index) => (
+              <button
+                key={`${color}-${index}`}
+                onClick={() => onBackgroundColorChange(color)}
+                className={`w-4 h-4 rounded border transition-transform hover:scale-110 flex items-center justify-center ${
+                  backgroundColor === color ? 'border-blue-500 ring-1 ring-blue-200' : 'border-gray-300'
+                }`}
+                style={{ backgroundColor: color }}
+              >
+                {backgroundColor === color && (
+                  <svg className="w-2 h-2" viewBox="0 0 20 20" fill="currentColor" style={{ color: isLightColor(color) ? '#000' : '#fff' }}>
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
