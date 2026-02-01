@@ -43,28 +43,33 @@ export async function downloadAsGif(
     const imageData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE)
     const { data } = imageData
 
-    // RGBA to RGB（アルファチャンネルを白背景と合成）
-    const rgbData = new Uint8Array(CANVAS_SIZE * CANVAS_SIZE * 3)
+    // RGBA形式のまま処理（アルファチャンネルを白背景と合成）
+    // gifencはRGBA形式（4バイト/ピクセル）を期待している
+    const rgbaData = new Uint8Array(CANVAS_SIZE * CANVAS_SIZE * 4)
     for (let i = 0; i < CANVAS_SIZE * CANVAS_SIZE; i++) {
       const r = data[i * 4]
       const g = data[i * 4 + 1]
       const b = data[i * 4 + 2]
       const a = data[i * 4 + 3] / 255
 
-      // アルファブレンド（白背景）
-      rgbData[i * 3] = Math.round(r * a + 255 * (1 - a))
-      rgbData[i * 3 + 1] = Math.round(g * a + 255 * (1 - a))
-      rgbData[i * 3 + 2] = Math.round(b * a + 255 * (1 - a))
+      // アルファブレンド（白背景）して完全不透明に
+      rgbaData[i * 4] = Math.round(r * a + 255 * (1 - a))
+      rgbaData[i * 4 + 1] = Math.round(g * a + 255 * (1 - a))
+      rgbaData[i * 4 + 2] = Math.round(b * a + 255 * (1 - a))
+      rgbaData[i * 4 + 3] = 255 // 完全不透明
     }
 
     // 256色パレットに量子化
-    const palette = quantize(rgbData, 256)
-    const indexedPixels = applyPalette(rgbData, palette)
+    const palette = quantize(rgbaData, 256)
+    const indexedPixels = applyPalette(rgbaData, palette)
 
-    // フレームを追加
+    // フレームを追加（最初のフレームでrepeat: 0を設定して無限ループ）
+    // dispose: 2 = フレームを背景色に戻す（アニメーションの正常な表示に必要）
     gif.writeFrame(indexedPixels, CANVAS_SIZE, CANVAS_SIZE, {
       palette,
       delay,
+      dispose: 2,
+      ...(frameIndex === 0 ? { repeat: 0 } : {}),
     })
   }
 

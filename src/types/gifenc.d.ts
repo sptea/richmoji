@@ -10,6 +10,7 @@ declare module 'gifenc' {
         delay?: number
         transparent?: number
         dispose?: number
+        repeat?: number  // 0 = 無限ループ, -1 = ループなし, N = N回ループ
       }
     ): void
     finish(): void
