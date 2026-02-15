@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { EmojiState, COLOR_THEMES, ColorThemeId } from '../types/emoji'
+import { EmojiState, COLOR_THEMES, ColorThemeId, TextLayoutMode, TEXT_LAYOUT_MODES } from '../types/emoji'
 import { drawEmoji, loadImage } from '../utils/canvas'
 import { calculateFrameTransform, TOTAL_FRAMES, FRAME_DELAY } from '../utils/animation'
 
@@ -24,6 +24,7 @@ interface PreviewProps {
   autoFit: boolean
   textOpacity: number
   textOffset: { x: number; y: number }
+  layoutMode: TextLayoutMode
   onTextChange: (text: string) => void
   onTextColorChange: (color: string) => void
   onBackgroundColorChange: (color: string) => void
@@ -32,6 +33,7 @@ interface PreviewProps {
   onTextOpacityChange: (opacity: number) => void
   onTextOffsetChange: (offset: { x: number; y: number }) => void
   onTextOffsetReset: () => void
+  onLayoutModeChange: (mode: TextLayoutMode) => void
 }
 
 type BackgroundType = 'checker' | 'white' | 'dark'
@@ -47,6 +49,7 @@ export function Preview({
   autoFit,
   textOpacity,
   textOffset,
+  layoutMode,
   onTextChange,
   onTextColorChange,
   onBackgroundColorChange,
@@ -55,6 +58,7 @@ export function Preview({
   onTextOpacityChange,
   onTextOffsetChange,
   onTextOffsetReset,
+  onLayoutModeChange,
 }: PreviewProps) {
   // 3つの背景用canvas refs
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([null, null, null])
@@ -204,32 +208,54 @@ export function Preview({
   // サイズ・透明度コントロール（インラインで使用）
   const sizeOpacityControls = (
     <div className="mb-3 space-y-1.5">
-      <div className="flex items-center gap-2">
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={autoFit}
-            onChange={(e) => onAutoFitChange(e.target.checked)}
-            className="w-3.5 h-3.5 rounded"
-          />
-          <span className="text-xs text-gray-500">自動</span>
-        </label>
-        <div className="flex-1 flex items-center gap-1">
-          <span className="text-xs text-gray-500">サイズ</span>
-          <input
-            type="range"
-            min={8}
-            max={128}
-            value={fontSize}
-            onChange={(e) => {
-              if (autoFit) onAutoFitChange(false)
-              onFontSizeChange(Number(e.target.value))
-            }}
-            className="flex-1"
-          />
-          <span className="text-xs text-gray-500 w-8 text-right">{fontSize}</span>
-        </div>
+      {/* レイアウトモード */}
+      <div className="flex items-center gap-1">
+        {TEXT_LAYOUT_MODES.map((mode) => (
+          <button
+            key={mode.id}
+            onClick={() => onLayoutModeChange(mode.id)}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              layoutMode === mode.id
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            title={mode.description}
+          >
+            {mode.name}
+          </button>
+        ))}
       </div>
+
+      {/* 通常モードの場合のみサイズ調整を表示 */}
+      {layoutMode === 'normal' && (
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={autoFit}
+              onChange={(e) => onAutoFitChange(e.target.checked)}
+              className="w-3.5 h-3.5 rounded"
+            />
+            <span className="text-xs text-gray-500">自動</span>
+          </label>
+          <div className="flex-1 flex items-center gap-1">
+            <span className="text-xs text-gray-500">サイズ</span>
+            <input
+              type="range"
+              min={8}
+              max={128}
+              value={fontSize}
+              onChange={(e) => {
+                if (autoFit) onAutoFitChange(false)
+                onFontSizeChange(Number(e.target.value))
+              }}
+              className="flex-1"
+            />
+            <span className="text-xs text-gray-500 w-8 text-right">{fontSize}</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-500">透明度</span>
         <input

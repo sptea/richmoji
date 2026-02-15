@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, DEFAULT_ANIMATION_STATE, DEFAULT_TEXT_OFFSET, FontId, ShadowPresetId, StylePreset, AnimationEffectId, FONTS, TextOffset } from '../types/emoji'
+import { EmojiState, DEFAULT_EMOJI_STATE, DEFAULT_BACKGROUND_IMAGE, DEFAULT_ANIMATION_STATE, DEFAULT_TEXT_OFFSET, FontId, ShadowPresetId, StylePreset, AnimationEffectId, FONTS, TextOffset, TextLayoutMode } from '../types/emoji'
 import { calculateAutoFitSize } from '../utils/canvas'
 import { FontActions, StrokeActions, BackgroundImageActions, AnimationActions } from '../types/editor'
 
@@ -103,6 +103,10 @@ export function useEmojiState() {
 
   const resetTextOffset = useCallback(() => {
     setState(prev => ({ ...prev, textOffset: DEFAULT_TEXT_OFFSET }))
+  }, [])
+
+  const setLayoutMode = useCallback((layoutMode: TextLayoutMode) => {
+    setState(prev => ({ ...prev, layoutMode }))
   }, [])
 
   const setBackgroundColor = useCallback((backgroundColor: string) => {
@@ -265,6 +269,7 @@ export function useEmojiState() {
     setTextOpacity,
     setTextOffset,
     resetTextOffset,
+    setLayoutMode,
     setBackgroundColor,
     fontActions,
     strokeActions,

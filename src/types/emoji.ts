@@ -84,6 +84,16 @@ export const DEFAULT_TEXT_OFFSET: TextOffset = {
   y: 0,
 }
 
+// テキストレイアウトモード
+export type TextLayoutMode = 'normal' | 'fill-stretch' | 'fill-fit'
+
+// テキストレイアウトモード定義
+export const TEXT_LAYOUT_MODES = [
+  { id: 'normal', name: '通常', description: '自動サイズ調整' },
+  { id: 'fill-stretch', name: 'ストレッチ', description: '縦横引き伸ばし' },
+  { id: 'fill-fit', name: '最大化', description: '比率を保って最大' },
+] as const
+
 // 絵文字の状態
 export interface EmojiState {
   text: string
@@ -96,6 +106,7 @@ export interface EmojiState {
   textColor: string
   textOpacity: number
   textOffset: TextOffset
+  layoutMode: TextLayoutMode
   backgroundColor: string
   backgroundImage: BackgroundImage
   stroke: {
@@ -128,6 +139,7 @@ export const DEFAULT_EMOJI_STATE: EmojiState = {
   textColor: '#000000',
   textOpacity: 1,
   textOffset: DEFAULT_TEXT_OFFSET,
+  layoutMode: 'normal',
   backgroundColor: 'transparent',
   backgroundImage: DEFAULT_BACKGROUND_IMAGE,
   stroke: {

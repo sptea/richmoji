@@ -1,7 +1,8 @@
-import { EmojiState, FONTS, SHADOW_PRESETS, BackgroundImage } from '../types/emoji'
+import { EmojiState, FONTS, SHADOW_PRESETS, BackgroundImage, TextLayoutMode } from '../types/emoji'
 import { AnimationTransform, applyHueShift, DEFAULT_TRANSFORM } from './animation'
 
 const CANVAS_SIZE = 128
+const FILL_PADDING = 4 // フィルモード時の余白
 
 // 画像キャッシュ（同じ画像の再読み込みを防ぐ）
 const imageCache = new Map<string, HTMLImageElement>()
@@ -57,6 +58,37 @@ function drawBackgroundImage(
   ctx.restore()
 }
 
+// フィルモード用のスケール係数を計算
+function calculateFillScale(
+  ctx: CanvasRenderingContext2D,
+  lines: string[],
+  fontSize: number,
+  layoutMode: TextLayoutMode
+): { scaleX: number; scaleY: number } {
+  if (layoutMode === 'normal') {
+    return { scaleX: 1, scaleY: 1 }
+  }
+
+  const lineHeight = fontSize * 1.2
+  const totalHeight = lines.length * lineHeight
+  const maxLineWidth = Math.max(...lines.map(line => ctx.measureText(line).width))
+
+  const targetWidth = CANVAS_SIZE - FILL_PADDING * 2
+  const targetHeight = CANVAS_SIZE - FILL_PADDING * 2
+
+  const scaleX = targetWidth / maxLineWidth
+  const scaleY = targetHeight / totalHeight
+
+  if (layoutMode === 'fill-stretch') {
+    // 縦横独立にスケーリング（引き伸ばし）
+    return { scaleX, scaleY }
+  } else {
+    // fill-fit: 縦横比を保って最大化
+    const uniformScale = Math.min(scaleX, scaleY)
+    return { scaleX: uniformScale, scaleY: uniformScale }
+  }
+}
+
 // テキストを描画する
 export function drawEmoji(
   ctx: CanvasRenderingContext2D,
@@ -64,7 +96,7 @@ export function drawEmoji(
   bgImageElement?: HTMLImageElement,
   transform: AnimationTransform = DEFAULT_TRANSFORM
 ): void {
-  const { text, font, textColor, textOpacity, textOffset, backgroundColor, backgroundImage, stroke, shadow } = state
+  const { text, font, textColor, textOpacity, textOffset, layoutMode, backgroundColor, backgroundImage, stroke, shadow } = state
 
   // キャンバスをクリア
   ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
@@ -118,8 +150,16 @@ export function drawEmoji(
   const lines = displayText.split('\n')
   const lineHeight = font.size * 1.2
   const totalHeight = lines.length * lineHeight
-  const startY = (CANVAS_SIZE - totalHeight) / 2 + lineHeight / 2 + textOffset.y
-  const baseX = CANVAS_SIZE / 2 + textOffset.x
+
+  // フィルモード用スケール計算
+  const fillScale = calculateFillScale(ctx, lines, font.size, layoutMode)
+
+  // フィルモードの場合は中央配置（オフセット無効）
+  const effectiveOffsetX = layoutMode === 'normal' ? textOffset.x : 0
+  const effectiveOffsetY = layoutMode === 'normal' ? textOffset.y : 0
+
+  const startY = (CANVAS_SIZE - totalHeight * fillScale.scaleY) / 2 + (lineHeight * fillScale.scaleY) / 2 + effectiveOffsetY
+  const baseX = CANVAS_SIZE / 2 + effectiveOffsetX
 
   // 色相シフトを適用
   const effectiveTextColor = transform.hueShift !== 0
@@ -150,28 +190,52 @@ export function drawEmoji(
     ctx.shadowOffsetY = shadowPreset.offsetY
   }
 
-  // 波打ち効果の場合は文字ごとに描画
-  if (transform.charOffsets && transform.charOffsets.length > 0) {
+  // 波打ち効果の場合は文字ごとに描画（フィルモードでは波打ちは通常描画にフォールバック）
+  if (transform.charOffsets && transform.charOffsets.length > 0 && layoutMode === 'normal') {
     drawWaveText(ctx, lines, startY, lineHeight, effectiveTextColor, textOpacity * transform.opacity, stroke, transform.charOffsets, baseX)
   } else {
     // 各行を描画
     lines.forEach((line, index) => {
-      const y = startY + index * lineHeight
+      const y = startY + index * lineHeight * fillScale.scaleY
 
-      // 縁取り
-      if (stroke.enabled) {
-        ctx.strokeStyle = stroke.color
-        ctx.lineWidth = stroke.width * 2
-        ctx.lineJoin = 'round'
-        ctx.miterLimit = 2
-        ctx.strokeText(line, baseX, y)
+      // フィルモードの場合はスケーリングを適用
+      if (fillScale.scaleX !== 1 || fillScale.scaleY !== 1) {
+        ctx.save()
+        ctx.translate(baseX, y)
+        ctx.scale(fillScale.scaleX, fillScale.scaleY)
+
+        // 縁取り
+        if (stroke.enabled) {
+          ctx.strokeStyle = stroke.color
+          ctx.lineWidth = stroke.width * 2
+          ctx.lineJoin = 'round'
+          ctx.miterLimit = 2
+          ctx.strokeText(line, 0, 0)
+        }
+
+        // テキスト本体
+        ctx.fillStyle = effectiveTextColor
+        ctx.globalAlpha = textOpacity * transform.opacity
+        ctx.fillText(line, 0, 0)
+        ctx.globalAlpha = 1
+        ctx.restore()
+      } else {
+        // 通常描画
+        // 縁取り
+        if (stroke.enabled) {
+          ctx.strokeStyle = stroke.color
+          ctx.lineWidth = stroke.width * 2
+          ctx.lineJoin = 'round'
+          ctx.miterLimit = 2
+          ctx.strokeText(line, baseX, y)
+        }
+
+        // テキスト本体
+        ctx.fillStyle = effectiveTextColor
+        ctx.globalAlpha = textOpacity * transform.opacity
+        ctx.fillText(line, baseX, y)
+        ctx.globalAlpha = 1
       }
-
-      // テキスト本体
-      ctx.fillStyle = effectiveTextColor
-      ctx.globalAlpha = textOpacity * transform.opacity
-      ctx.fillText(line, baseX, y)
-      ctx.globalAlpha = 1
     })
   }
 
