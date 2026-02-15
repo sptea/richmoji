@@ -11,6 +11,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "fflate": "^0.8.2",
     "gifenc": "^1.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

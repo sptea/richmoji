@@ -4,7 +4,7 @@ import { Editor } from './components/Editor'
 import { useEmojiState } from './hooks/useEmojiState'
 import { canvasToBlob, loadImage, drawEmoji } from './utils/canvas'
 import { downloadAsGif } from './utils/gif'
-import { generateFilename, saveFile } from './utils/download'
+import { generateFilename, saveFile, downloadSplitImages, SplitSize } from './utils/download'
 
 function App() {
   const {
@@ -65,6 +65,41 @@ function App() {
     }
   }, [state])
 
+  const handleSplitDownload = useCallback(async (splitSize: SplitSize) => {
+    try {
+      // 背景画像がある場合は読み込む
+      let bgImageElement: HTMLImageElement | undefined
+      if (state.backgroundImage.data) {
+        try {
+          bgImageElement = await loadImage(state.backgroundImage.data)
+        } catch {
+          // 画像読み込みに失敗した場合は無視
+        }
+      }
+
+      // ファイル名を生成
+      const filename = generateFilename(state.text)
+
+      // 出力用のCanvasを作成
+      const canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 128
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        throw new Error('Canvas context not available')
+      }
+
+      // 描画
+      drawEmoji(ctx, state, bgImageElement)
+
+      // 分割ダウンロード
+      await downloadSplitImages(canvas, splitSize, filename)
+    } catch (error) {
+      console.error('ダウンロードに失敗しました:', error)
+      alert('ダウンロードに失敗しました。もう一度お試しください。')
+    }
+  }, [state])
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* 広い画面: 2カラム / 狭い画面: 1カラム + フローティングプレビュー */}
@@ -95,6 +130,7 @@ function App() {
               <Preview
                 state={state}
                 onDownload={handleDownload}
+                onSplitDownload={handleSplitDownload}
                 text={state.text}
                 textColor={state.textColor}
                 backgroundColor={state.backgroundColor}
@@ -123,6 +159,7 @@ function App() {
         <Preview
           state={state}
           onDownload={handleDownload}
+          onSplitDownload={handleSplitDownload}
           compact
           text={state.text}
           textColor={state.textColor}

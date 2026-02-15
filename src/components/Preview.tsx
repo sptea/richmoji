@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import { EmojiState, COLOR_THEMES, ColorThemeId, TextLayoutMode, TEXT_LAYOUT_MODES } from '../types/emoji'
 import { drawEmoji, loadImage } from '../utils/canvas'
 import { calculateFrameTransform, TOTAL_FRAMES, FRAME_DELAY } from '../utils/animation'
+import { SPLIT_OPTIONS, SplitSize } from '../utils/download'
 
 // 明るい色かどうかを判定（チェックマークの色を決めるため）
 function isLightColor(color: string): boolean {
@@ -16,6 +17,7 @@ function isLightColor(color: string): boolean {
 interface PreviewProps {
   state: EmojiState
   onDownload: () => void
+  onSplitDownload: (splitSize: SplitSize) => void
   compact?: boolean
   text: string
   textColor: string
@@ -41,6 +43,7 @@ type BackgroundType = 'checker' | 'white' | 'dark'
 export function Preview({
   state,
   onDownload,
+  onSplitDownload,
   compact = false,
   text,
   textColor,
@@ -76,18 +79,25 @@ export function Preview({
   const themeDropdownRef = useRef<HTMLDivElement>(null)
   const currentTheme = COLOR_THEMES.find(t => t.id === colorTheme) || COLOR_THEMES[0]
 
+  // 分割ダウンロードドロップダウン状態
+  const [isSplitDropdownOpen, setIsSplitDropdownOpen] = useState(false)
+  const splitDropdownRef = useRef<HTMLDivElement>(null)
+
   // ドロップダウン外クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (themeDropdownRef.current && !themeDropdownRef.current.contains(e.target as Node)) {
         setIsThemeDropdownOpen(false)
       }
+      if (splitDropdownRef.current && !splitDropdownRef.current.contains(e.target as Node)) {
+        setIsSplitDropdownOpen(false)
+      }
     }
-    if (isThemeDropdownOpen) {
+    if (isThemeDropdownOpen || isSplitDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isThemeDropdownOpen])
+  }, [isThemeDropdownOpen, isSplitDropdownOpen])
 
   // 背景画像を読み込む
   useEffect(() => {
@@ -500,12 +510,47 @@ export function Preview({
         {sizeOpacityControls}
 
         {/* ダウンロードボタン */}
-        <button
-          onClick={onDownload}
-          className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors"
-        >
-          {isAnimated ? 'GIFをダウンロード' : 'PNGをダウンロード'}
-        </button>
+        {isAnimated ? (
+          <button
+            onClick={onDownload}
+            className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            GIFをダウンロード
+          </button>
+        ) : (
+          <div className="relative flex" ref={splitDropdownRef}>
+            <button
+              onClick={onDownload}
+              className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-l-lg transition-colors"
+            >
+              PNGをダウンロード
+            </button>
+            <button
+              onClick={() => setIsSplitDropdownOpen(!isSplitDropdownOpen)}
+              className="px-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg border-l border-blue-400 transition-colors"
+            >
+              <svg className={`w-4 h-4 transition-transform ${isSplitDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isSplitDropdownOpen && (
+              <div className="absolute right-0 bottom-full mb-1 bg-white border border-gray-300 rounded-lg shadow-lg py-1 min-w-[130px] z-10">
+                {SPLIT_OPTIONS.filter(opt => opt.size > 1).map((option) => (
+                  <button
+                    key={option.size}
+                    onClick={() => {
+                      onSplitDownload(option.size)
+                      setIsSplitDropdownOpen(false)
+                    }}
+                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-gray-100"
+                  >
+                    {option.label} 分割 ({option.tiles}枚)
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     )
   }
@@ -535,12 +580,47 @@ export function Preview({
       {sizeOpacityControls}
 
       {/* ダウンロードボタン */}
-      <button
-        onClick={onDownload}
-        className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
-      >
-        {isAnimated ? 'GIFをダウンロード' : 'PNGをダウンロード'}
-      </button>
+      {isAnimated ? (
+        <button
+          onClick={onDownload}
+          className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
+        >
+          GIFをダウンロード
+        </button>
+      ) : (
+        <div className="relative flex" ref={splitDropdownRef}>
+          <button
+            onClick={onDownload}
+            className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-l-lg transition-colors"
+          >
+            PNGをダウンロード
+          </button>
+          <button
+            onClick={() => setIsSplitDropdownOpen(!isSplitDropdownOpen)}
+            className="px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg border-l border-blue-400 transition-colors"
+          >
+            <svg className={`w-4 h-4 transition-transform ${isSplitDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {isSplitDropdownOpen && (
+            <div className="absolute right-0 bottom-full mb-1 bg-white border border-gray-300 rounded-lg shadow-lg py-1 min-w-[140px] z-10">
+              {SPLIT_OPTIONS.filter(opt => opt.size > 1).map((option) => (
+                <button
+                  key={option.size}
+                  onClick={() => {
+                    onSplitDownload(option.size)
+                    setIsSplitDropdownOpen(false)
+                  }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100"
+                >
+                  {option.label} 分割 ({option.tiles}枚)
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
