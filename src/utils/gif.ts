@@ -2,6 +2,7 @@ import { GIFEncoder, quantize, applyPalette } from 'gifenc'
 import { EmojiState } from '../types/emoji'
 import { drawEmoji } from './canvas'
 import { calculateFrameTransform, TOTAL_FRAMES, FRAME_DELAY } from './animation'
+import { saveFile } from './download'
 
 const CANVAS_SIZE = 128
 
@@ -79,13 +80,5 @@ export async function downloadAsGif(
   // Blobを作成してダウンロード
   const bytes = gif.bytes()
   const blob = new Blob([bytes], { type: 'image/gif' })
-  const url = URL.createObjectURL(blob)
-
-  const link = document.createElement('a')
-  link.download = `${filename || 'emoji'}.gif`
-  link.href = url
-  link.click()
-
-  // URLを解放
-  URL.revokeObjectURL(url)
+  await saveFile(blob, filename, 'image/gif', 'gif')
 }

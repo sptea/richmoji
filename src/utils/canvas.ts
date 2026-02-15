@@ -327,10 +327,15 @@ export function calculateAutoFitSize(
   return minSize
 }
 
-// PNGとしてダウンロード
-export function downloadAsPng(canvas: HTMLCanvasElement, filename: string): void {
-  const link = document.createElement('a')
-  link.download = `${filename || 'emoji'}.png`
-  link.href = canvas.toDataURL('image/png')
-  link.click()
+// PNGとしてダウンロード（Blobを返す）
+export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) {
+        resolve(blob)
+      } else {
+        reject(new Error('Failed to create blob from canvas'))
+      }
+    }, 'image/png')
+  })
 }

@@ -2,8 +2,9 @@ import { useCallback } from 'react'
 import { Preview } from './components/Preview'
 import { Editor } from './components/Editor'
 import { useEmojiState } from './hooks/useEmojiState'
-import { downloadAsPng, loadImage, drawEmoji } from './utils/canvas'
+import { canvasToBlob, loadImage, drawEmoji } from './utils/canvas'
 import { downloadAsGif } from './utils/gif'
+import { generateFilename, saveFile } from './utils/download'
 
 function App() {
   const {
@@ -37,8 +38,8 @@ function App() {
         }
       }
 
-      // ファイル名は入力テキストの最初の行（または'emoji'）
-      const filename = state.text.split('\n')[0].trim() || 'emoji'
+      // ファイル名を生成（全行を結合、長い場合は省略）
+      const filename = generateFilename(state.text)
 
       // アニメーションが有効な場合はGIF、そうでなければPNG
       if (state.animation.enabled && state.animation.effects.length > 0) {
@@ -55,7 +56,8 @@ function App() {
 
         // 描画
         drawEmoji(ctx, state, bgImageElement)
-        downloadAsPng(canvas, filename)
+        const blob = await canvasToBlob(canvas)
+        await saveFile(blob, filename, 'image/png', 'png')
       }
     } catch (error) {
       console.error('ダウンロードに失敗しました:', error)
