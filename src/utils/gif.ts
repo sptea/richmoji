@@ -80,5 +80,5 @@ export async function downloadAsGif(
   // Blobを作成してダウンロード
   const bytes = gif.bytes()
   const blob = new Blob([bytes], { type: 'image/gif' })
-  await saveFile(blob, filename, 'image/gif', 'gif')
+  saveFile(blob, filename, 'image/gif', 'gif')
 }

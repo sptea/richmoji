@@ -41,64 +41,13 @@ export function generateFilename(text: string): string {
   return filename || 'emoji'
 }
 
-// showSaveFilePicker APIの型定義
-interface FilePickerOptions {
-  suggestedName?: string
-  types?: Array<{
-    description: string
-    accept: Record<string, string[]>
-  }>
-}
-
-interface FileSystemWritableFileStream extends WritableStream {
-  write(data: BufferSource | Blob | string): Promise<void>
-  close(): Promise<void>
-}
-
-interface FileSystemFileHandle {
-  createWritable(): Promise<FileSystemWritableFileStream>
-}
-
-declare global {
-  interface Window {
-    showSaveFilePicker?: (options?: FilePickerOptions) => Promise<FileSystemFileHandle>
-  }
-}
-
-// ファイル保存ダイアログを使ってダウンロード（フォールバック付き）
-export async function saveFile(
+// ファイルをダウンロード（従来方式、ブラウザのダウンロード通知あり）
+export function saveFile(
   blob: Blob,
   suggestedName: string,
-  mimeType: string,
+  _mimeType: string,
   extension: string
-): Promise<void> {
-  // showSaveFilePicker が使える場合はダイアログを表示
-  if (window.showSaveFilePicker) {
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: `${suggestedName}.${extension}`,
-        types: [
-          {
-            description: extension.toUpperCase() + ' Image',
-            accept: { [mimeType]: [`.${extension}`] },
-          },
-        ],
-      })
-      const writable = await handle.createWritable()
-      await writable.write(blob)
-      await writable.close()
-      return
-    } catch (err) {
-      // ユーザーがキャンセルした場合
-      if (err instanceof Error && err.name === 'AbortError') {
-        return
-      }
-      // その他のエラーはフォールバック
-      console.warn('showSaveFilePicker failed, falling back:', err)
-    }
-  }
-
-  // フォールバック: 従来のダウンロード方式
+): void {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.download = `${suggestedName}.${extension}`
@@ -136,7 +85,7 @@ export async function downloadSplitImages(
         else reject(new Error('Failed to create blob'))
       }, 'image/png')
     })
-    await saveFile(blob, baseFilename, 'image/png', 'png')
+    saveFile(blob, baseFilename, 'image/png', 'png')
     return
   }
 
@@ -184,5 +133,5 @@ export async function downloadSplitImages(
   const zipBlob = new Blob([zipped], { type: 'application/zip' })
 
   // ダウンロード
-  await saveFile(zipBlob, baseFilename, 'application/zip', 'zip')
+  saveFile(zipBlob, baseFilename, 'application/zip', 'zip')
 }

@@ -57,7 +57,7 @@ function App() {
         // 描画
         drawEmoji(ctx, state, bgImageElement)
         const blob = await canvasToBlob(canvas)
-        await saveFile(blob, filename, 'image/png', 'png')
+        saveFile(blob, filename, 'image/png', 'png')
       }
     } catch (error) {
       console.error('ダウンロードに失敗しました:', error)
