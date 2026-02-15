@@ -185,10 +185,10 @@ export const COLOR_THEMES: readonly ColorTheme[] = [
     id: 'pastel',
     name: 'パステル',
     colors: [
-      '#ffd1dc', '#ffe4e1', '#e6e6fa', '#d8bfd8',
-      '#b0e0e6', '#afeeee', '#98fb98', '#f0fff0',
-      '#fffacd', '#ffefd5', '#ffe4b5', '#ffdab9',
-      '#ffffff', '#f5f5f5', '#dcdcdc', '#d3d3d3',
+      '#ffb6c1', '#f4a7b9', '#c9a0dc', '#b399d4',
+      '#89c3eb', '#87ceeb', '#81c784', '#a5d6a7',
+      '#fff176', '#ffcc80', '#ffab91', '#f48fb1',
+      '#ffffff', '#e8e8e8', '#bdbdbd', '#9e9e9e',
     ],
   },
   {

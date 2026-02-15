@@ -72,7 +72,22 @@ export function Preview({
 
   // カラーテーマ状態
   const [colorTheme, setColorTheme] = useState<ColorThemeId>('default')
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false)
+  const themeDropdownRef = useRef<HTMLDivElement>(null)
   const currentTheme = COLOR_THEMES.find(t => t.id === colorTheme) || COLOR_THEMES[0]
+
+  // ドロップダウン外クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(e.target as Node)) {
+        setIsThemeDropdownOpen(false)
+      }
+    }
+    if (isThemeDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isThemeDropdownOpen])
 
   // 背景画像を読み込む
   useEffect(() => {
@@ -275,18 +290,53 @@ export function Preview({
   // 色タイル（インラインで使用）
   const colorTiles = (
     <div className="mb-3">
-      {/* テーマ選択 */}
+      {/* テーマ選択（カスタムドロップダウン） */}
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xs text-gray-500">パレット</span>
-        <select
-          value={colorTheme}
-          onChange={(e) => setColorTheme(e.target.value as ColorThemeId)}
-          className="flex-1 text-xs border border-gray-300 rounded px-1.5 py-0.5 bg-white"
-        >
-          {COLOR_THEMES.map((theme) => (
-            <option key={theme.id} value={theme.id}>{theme.name}</option>
-          ))}
-        </select>
+        <div className="flex-1 relative" ref={themeDropdownRef}>
+          <button
+            onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm border border-gray-300 rounded bg-white hover:bg-gray-50"
+          >
+            <div className="flex gap-0.5 shrink-0">
+              {currentTheme.colors.slice(0, 5).map((color, i) => (
+                <div key={i} className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
+              ))}
+            </div>
+            <span className="flex-1 text-left truncate">{currentTheme.name}</span>
+            <svg className={`w-4 h-4 text-gray-400 transition-transform ${isThemeDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {isThemeDropdownOpen && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg">
+              {COLOR_THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  onClick={() => {
+                    setColorTheme(theme.id)
+                    setIsThemeDropdownOpen(false)
+                  }}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-gray-100 ${
+                    colorTheme === theme.id ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <div className="flex gap-0.5 shrink-0">
+                    {theme.colors.slice(0, 5).map((color, i) => (
+                      <div key={i} className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
+                    ))}
+                  </div>
+                  <span className="flex-1 text-left truncate">{theme.name}</span>
+                  {colorTheme === theme.id && (
+                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
